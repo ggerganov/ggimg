@@ -1207,8 +1207,6 @@ namespace ggimg {
                         nker -= work[256*(x - k) + j];
                     }
 
-                    ++work[256*(x - k) + src[(y + k + 1)*nx + (x - k)]];
-
                     for (j = 0; j < 256; ++j) {
                         hker[j] += work[256*(x + k + 1) + j];
                         nker += work[256*(x + k + 1) + j];
@@ -1226,11 +1224,9 @@ namespace ggimg {
                         hker[j] -= work[256*(x - k) + j];
                         nker -= work[256*(x - k) + j];
                     }
-
-                    ++work[256*(x - k) + src[(y + k + 1)*nx + (x - k)]];
                 }
 
-                for (int x = nx - k; x < nx; ++x) {
+                for (int x = 0; x < nx; ++x) {
                     ++work[256*x + src[(y + k + 1)*nx + x]];
                 }
             }
@@ -1270,9 +1266,6 @@ namespace ggimg {
                         nker -= work[256*(x - k) + j];
                     }
 
-                    --work[256*(x - k) + src[(y - k)*nx + (x - k)]];
-                    ++work[256*(x - k) + src[(y + k + 1)*nx + (x - k)]];
-
                     for (j = 0; j < 256; ++j) {
                         hker[j] += work[256*(x + k + 1) + j];
                         nker += work[256*(x + k + 1) + j];
@@ -1290,12 +1283,9 @@ namespace ggimg {
                         hker[j] -= work[256*(x - k) + j];
                         nker -= work[256*(x - k) + j];
                     }
-
-                    --work[256*(x - k) + src[(y - k)*nx + (x - k)]];
-                    ++work[256*(x - k) + src[(y + k + 1)*nx + (x - k)]];
                 }
 
-                for (int x = nx - k; x < nx; ++x) {
+                for (int x = 0; x < nx; ++x) {
                     --work[256*x + src[(y - k)*nx + x]];
                     ++work[256*x + src[(y + k + 1)*nx + x]];
                 }
@@ -1336,8 +1326,6 @@ namespace ggimg {
                         nker -= work[256*(x - k) + j];
                     }
 
-                    --work[256*(x - k) + src[(y - k)*nx + (x - k)]];
-
                     for (j = 0; j < 256; ++j) {
                         hker[j] += work[256*(x + k + 1) + j];
                         nker += work[256*(x + k + 1) + j];
@@ -1355,11 +1343,9 @@ namespace ggimg {
                         hker[j] -= work[256*(x - k) + j];
                         nker -= work[256*(x - k) + j];
                     }
-
-                    --work[256*(x - k) + src[(y - k)*nx + (x - k)]];
                 }
 
-                for (int x = nx - k; x < nx; ++x) {
+                for (int x = 0; x < nx; ++x) {
                     --work[256*x + src[(y - k)*nx + x]];
                 }
             }
