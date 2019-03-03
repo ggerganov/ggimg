@@ -77,12 +77,14 @@ int main(int argc, char ** argv) {
     Image2D img_luma601;
     Image2D img_luma709;
     Image2D img_grayscale;
-    Image2D img_normalized;
-    Image2D img_normalized_hist;
+    Image2D img_normalize;
+    Image2D img_normalize_hist;
     Image2D img_gaussian_filter;
     Image2D img_gradient_x;
     Image2D img_gradient_y;
     Image2D img_gradient_xy;
+    Image2D img_scale_nn;
+    Image2D img_scale_li;
 
     {
         printf("[+] Read/write ppm\n");
@@ -146,13 +148,13 @@ int main(int argc, char ** argv) {
     {
         printf("[+] Normalize\n");
 
-        img_normalized.resize(nx*ny);
-        if (ggimg::normalize_2d(nx, ny, img_grayscale.data(), (uint8_t) 100, (uint8_t) 200, img_normalized.data()) == false) {
+        img_normalize.resize(nx*ny);
+        if (ggimg::normalize_2d(nx, ny, img_grayscale.data(), (uint8_t) 100, (uint8_t) 200, img_normalize.data()) == false) {
             printf("Failed to normalize image\n");
             return -1;
         }
 
-        if (write_ppm("ggimg_normalized.ppm", nx, ny, img_normalized, 1) == false) {
+        if (write_ppm("ggimg_normalized.ppm", nx, ny, img_normalize, 1) == false) {
             printf("Failed to write image\n");
             return -1;
         }
@@ -161,13 +163,13 @@ int main(int argc, char ** argv) {
     {
         printf("[+] Normalize histogram\n");
 
-        img_normalized_hist.resize(nx*ny);
-        if (ggimg::normalize_hist_2d(nx, ny, img_grayscale.data(), img_normalized_hist.data(), (uint8_t) 255) == false) {
+        img_normalize_hist.resize(nx*ny);
+        if (ggimg::normalize_hist_2d(nx, ny, img_grayscale.data(), img_normalize_hist.data(), (uint8_t) 255) == false) {
             printf("Failed to normalize_hist image\n");
             return -1;
         }
 
-        if (write_ppm("ggimg_normalized_hist.ppm", nx, ny, img_normalized_hist, 1) == false) {
+        if (write_ppm("ggimg_normalized_hist.ppm", nx, ny, img_normalize_hist, 1) == false) {
             printf("Failed to write image\n");
             return -1;
         }
@@ -228,6 +230,38 @@ int main(int argc, char ** argv) {
         }
 
         if (write_ppm("ggimg_gradient.ppm", nx, ny, img_gradient_xy, 1) == false) {
+            printf("Failed to write image\n");
+            return -1;
+        }
+    }
+
+    {
+        printf("[+] Scale using nearest-neighbours\n");
+
+        int snx = -1;
+        int sny = -1;
+        if (ggimg::scale_nn_2d(nx, ny, img_grayscale.data(), 0.33f, 0.66f, snx, sny, img_scale_nn) == false) {
+            printf("Failed to calculate scaled image using nearest-neighbours\n");
+            return -1;
+        }
+
+        if (write_ppm("ggimg_scale_nn.ppm", snx, sny, img_scale_nn, 1) == false) {
+            printf("Failed to write image\n");
+            return -1;
+        }
+    }
+
+    {
+        printf("[+] Scale using linear-interpolation\n");
+
+        int snx = -1;
+        int sny = -1;
+        if (ggimg::scale_li_2d(nx, ny, img_grayscale.data(), 0.33f, 0.66f, snx, sny, img_scale_li) == false) {
+            printf("Failed to calculate scaled image using linear-interpolation\n");
+            return -1;
+        }
+
+        if (write_ppm("ggimg_scale_li.ppm", snx, sny, img_scale_li, 1) == false) {
             printf("Failed to write image\n");
             return -1;
         }

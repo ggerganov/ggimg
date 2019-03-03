@@ -48,10 +48,16 @@ namespace ggimg {
     template <typename T> bool gaussian_filter_2d(int nx, int ny, const T * src, T * dst, float sigma, int nw = 0, T * work = nullptr, bool wzero = true);
     template <typename T> bool gaussian_filter_3d(int nx, int ny, int nz, const T * src, T * dst, float sigma, int nthreads = 1, int nw = 0, T * work = nullptr, bool wzero = true);
 
+    template <typename T> bool median_filter_2d(int nx, int ny, const T * src, T * dst, int k, int nw = 0, T * work = nullptr, bool wzero = true);
+
+    template <typename T> bool scale_nn_2d(int snx, int sny, const T * src, float sx, float sy, int & dnx, int & dny, std::vector<T> & dst);
     template <typename T> bool scale_nn_3d(int snx, int sny, int snz, const T * src, float sx, float sy, float sz, int & dnx, int & dny, int & dnz, std::vector<T> & dst, int nthreads = 1);
+    template <typename T> bool scale_nn_isotropic_2d(int snx, int sny, const T * src, float s, int & dnx, int & dny, std::vector<T> & dst);
     template <typename T> bool scale_nn_isotropic_3d(int snx, int sny, int snz, const T * src, float s, int & dnx, int & dny, int & dnz, std::vector<T> & dst, int nthreads = 1);
 
+    template <typename T> bool scale_li_2d(int snx, int sny, const T * src, float sx, float sy, int & dnx, int & dny, std::vector<T> & dst);
     template <typename T> bool scale_li_3d(int snx, int sny, int snz, const T * src, float sx, float sy, float sz, int & dnx, int & dny, int & dnz, std::vector<T> & dst, int nthreads = 1);
+    template <typename T> bool scale_li_isotropic_3d(int snx, int sny, const T * src, float s, int & dnx, int & dny, std::vector<T> & dst);
     template <typename T> bool scale_li_isotropic_3d(int snx, int sny, int snz, const T * src, float s, int & dnx, int & dny, int & dnz, std::vector<T> & dst, int nthreads = 1);
 
     /*! \brief RGB image to Rec. 601 luminance image */
@@ -60,6 +66,7 @@ namespace ggimg {
             return rgb_to_luma601_3d(nx, ny, 1, src, dmin, dmax, dst);
         }
 
+    /*! \brief RGB image to Rec. 601 luminance image */
     template <typename TSrc, typename TDst>
         bool rgb_to_luma601_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
             if (nx < 1) return false;
@@ -92,6 +99,7 @@ namespace ggimg {
             return rgb_to_luma709_3d(nx, ny, 1, src, dmin, dmax, dst);
         }
 
+    /*! \brief RGB image to Rec. 709 luminance image */
     template <typename TSrc, typename TDst>
         bool rgb_to_luma709_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
             if (nx < 1) return false;
@@ -120,13 +128,14 @@ namespace ggimg {
 
     /*! \brief RGB image to grayscale image */
     template <typename TSrc, typename TDst>
-        bool rgb_to_gray_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
-            return rgb_to_luma709_3d(nx, ny, nz, src, dmin, dmax, dst);
-        }
-
-    template <typename TSrc, typename TDst>
         bool rgb_to_gray_2d(int nx, int ny, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
             return rgb_to_gray_3d(nx, ny, 1, src, dmin, dmax, dst);
+        }
+
+    /*! \brief RGB image to grayscale image */
+    template <typename TSrc, typename TDst>
+        bool rgb_to_gray_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
+            return rgb_to_luma709_3d(nx, ny, nz, src, dmin, dmax, dst);
         }
 
     /*! \brief Simple intensity scale.
@@ -139,6 +148,11 @@ namespace ggimg {
             return normalize_3d(nx, ny, 1, src, dmin, dmax, dst);
         }
 
+    /*! \brief Simple intensity scale.
+     *
+     * Works in-place (\a src == \a dst)
+     * Destination intensities in range [dmin, dmax]
+     */
     template <typename TSrc, typename TDst>
         bool normalize_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
             if (nx < 1) return false;
@@ -174,6 +188,11 @@ namespace ggimg {
             return normalize_robust_3d(nx, ny, 1, src, dmin, dmax, dst);
         }
 
+    /*! \brief Intensity scale which is robust to small number of huge intensity spikes.
+     *
+     * Works in-place (\a src == \a dst)
+     * Destination intensities in range [dmin, dmax]
+     */
     template <typename TSrc, typename TDst>
         bool normalize_robust_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
             if (nx < 1) return false;
@@ -519,6 +538,15 @@ namespace ggimg {
             return normalize_hist_3d(nx, ny, 1, src, dst, dmax, nw, work, wzero);
         }
 
+    /*! \brief Histogram equalization
+     *
+     * Can work in-place (\a src == \a dst)
+     * If \a work buffer is provided, it's size \a nw must at least (imax - imin + 1), where
+     * imax and imin are the maximum and minimum intensities in the image.
+     * On success, the \a dst image has intensities in the range [0, dmax]
+     *
+     * Ref: https://en.wikipedia.org/wiki/Histogram_equalization
+     */
     template <typename T>
         bool normalize_hist_3d(int nx, int ny, int nz, const T * src, T * dst, T dmax, int nw, int * work, bool wzero) {
             if (nx <= 0 || ny <= 0 || nz <= 0) return false;
@@ -850,6 +878,61 @@ namespace ggimg {
         }
 
     template <typename T>
+        bool scale_li_2d(int snx, int sny, const T * src, float sx, float sy, int & dnx, int & dny, std::vector<T> & dst) {
+            if (snx <= 0) return false;
+            if (sny <= 0) return false;
+            if (src == nullptr) return false;
+            if (sx <= 0.0f) return false;
+            if (sy <= 0.0f) return false;
+
+            if (src == dst.data()) return false;
+
+            dnx = std::round(snx*sx);
+            dny = std::round(sny*sy);
+
+            if (dnx <= 0) return false;
+            if (dny <= 0) return false;
+
+            dst.resize(dnx*dny);
+
+            {
+                float cx = ((float)(snx))/dnx;
+                float cy = ((float)(sny))/dny;
+
+                for (int iy = 0; iy < dny; ++iy) {
+                    float fy = ((float)(iy) + 0.5f)*cy;
+
+                    int iy1 = (int)(fy + 0.5f);
+                    int iy0 = iy1 - 1;
+                    if (iy0 < 0) ++iy0;
+                    if (iy1 >= sny) --iy1;
+                    fy -= (0.5f + (float)(iy0));
+                    for (int ix = 0; ix < dnx; ++ix) {
+                        float fx = ((float)(ix) + 0.5f)*cx;
+
+                        int ix1 = (int)(fx + 0.5f);
+                        int ix0 = ix1 - 1;
+                        if (ix0 < 0) ++ix0;
+                        if (ix1 >= snx) --ix1;
+                        fx -= (0.5f + (float)(ix0));
+
+                        auto v00 = src[iy0*snx + ix0];
+                        auto v01 = src[iy0*snx + ix1];
+                        auto v10 = src[iy1*snx + ix0];
+                        auto v11 = src[iy1*snx + ix1];
+
+                        auto v0 = v00 + fy*(v10 - v00);
+                        auto v1 = v01 + fy*(v11 - v01);
+
+                        dst[iy*dnx + ix] = v0 + fx*(v1 - v0);
+                    }
+                }
+            }
+
+            return true;
+        }
+
+    template <typename T>
         bool scale_li_3d(int snx, int sny, int snz, const T * src, float sx, float sy, float sz, int & dnx, int & dny, int & dnz, std::vector<T> & dst, int nthreads) {
             if (snx <= 0) return false;
             if (sny <= 0) return false;
@@ -937,9 +1020,52 @@ namespace ggimg {
         }
 
     template <typename T>
+        bool scale_li_isotropic_2d(int snx, int sny, const T * src, float s, int & dnx, int & dny, std::vector<T> & dst) {
+            return scale_li_2d(snx, sny, src, s, s, dnx, dny, dst);
+        }
+
+    template <typename T>
         bool scale_li_isotropic_3d(int snx, int sny, int snz, const T * src, float s, int & dnx, int & dny, int & dnz, std::vector<T> & dst, int nthreads) {
             return scale_li_3d(snx, sny, snz, src, s, s, s, dnx, dny, dnz, dst, nthreads);
         }
+
+    template <typename T>
+        bool scale_nn_2d(int snx, int sny, const T * src, float sx, float sy, int & dnx, int & dny, std::vector<T> & dst) {
+            if (snx <= 0) return false;
+            if (sny <= 0) return false;
+            if (src == nullptr) return false;
+            if (sx <= 0.0f) return false;
+            if (sy <= 0.0f) return false;
+
+            if (src == dst.data()) return false;
+
+            dnx = std::round(snx*sx);
+            dny = std::round(sny*sy);
+
+            if (dnx <= 0) return false;
+            if (dny <= 0) return false;
+
+            dst.resize(dnx*dny);
+
+            {
+                float cx = ((float)(snx))/dnx;
+                float cy = ((float)(sny))/dny;
+
+                for (int iy = 0; iy < dny; ++iy) {
+                    float fy = ((float)(iy) + 0.5f)*cy;
+                    int iy0 = std::round(fy - 0.5f);
+                    fy -= (0.5f + (float)(iy0));
+                    for (int ix = 0; ix < dnx; ++ix) {
+                        float fx = ((float)(ix) + 0.5f)*cx;
+                        int ix0 = std::round(fx - 0.5f);
+                        dst[iy*dnx + ix] = src[iy0*snx + ix0];
+                    }
+                }
+            }
+
+            return true;
+        }
+
 
     template <typename T>
         bool scale_nn_3d(int snx, int sny, int snz, const T * src, float sx, float sy, float sz, int & dnx, int & dny, int & dnz, std::vector<T> & dst, int nthreads) {
@@ -998,6 +1124,11 @@ namespace ggimg {
             }
 
             return true;
+        }
+
+    template <typename T>
+        bool scale_nn_isotropic_2d(int snx, int sny, const T * src, float s, int & dnx, int & dny, std::vector<T> & dst) {
+            return scale_nn_2d(snx, sny, src, s, s, dnx, dny, dst);
         }
 
     template <typename T>
