@@ -9,10 +9,13 @@
 #include <cmath>
 #include <vector>
 #include <algorithm>
-#include <atomic>
-#include <thread>
 
 namespace ggimg {
+
+    //
+    // Single-threaded operations
+    //
+
     /*! \brief RGB pixel to luminance Rec. 601: Y = 0.2989 R + 0.5870 G + 0.1140 B */
     template <typename T> inline float rgb_to_luma601(T r, T g, T b) { return 0.2989f*((float)(r)) + 0.5870f*((float)(g)) + 0.1140f*((float)(b)); }
     template <typename T> inline float rgb_to_luma601(const T * p) { return rgb_to_luma601(*p, *(p + 1), *(p + 2)); }
@@ -43,23 +46,40 @@ namespace ggimg {
     template <typename TSrc, typename TDst> bool gradient_sobel_3d(int mode, int nx, int ny, int nz, const TSrc * src, TDst dmax, TDst * dst, int nw = 0, float * work = nullptr);
 
     template <typename T> bool convolve_2d(int nx, int ny, const T * src, T * dst, int nk, const float * k, int nw = 0, T * work = nullptr, bool wzero = true);
-    template <typename T> bool convolve_3d(int nx, int ny, int nz, const T * src, T * dst, int nk, const float * k, int nthreads = 1, int nw = 0, T * work = nullptr, bool wzero = true);
-
     template <typename T> bool gaussian_filter_2d(int nx, int ny, const T * src, T * dst, float sigma, int nw = 0, T * work = nullptr, bool wzero = true);
-    template <typename T> bool gaussian_filter_3d(int nx, int ny, int nz, const T * src, T * dst, float sigma, int nthreads = 1, int nw = 0, T * work = nullptr, bool wzero = true);
-
     template <typename T> bool median_filter_2d(int nx, int ny, const T * src, T * dst, int k, int nw = 0, int * work = nullptr, bool wzero = true);
-    template <typename T> bool median_filter_3d(int nx, int ny, int nz, const T * src, T * dst, int k, int nthreads = 1, int nw = 0, int * work = nullptr, bool wzero = true);
 
     template <typename T> bool scale_nn_2d(int snx, int sny, const T * src, float sx, float sy, int & dnx, int & dny, std::vector<T> & dst);
-    template <typename T> bool scale_nn_3d(int snx, int sny, int snz, const T * src, float sx, float sy, float sz, int & dnx, int & dny, int & dnz, std::vector<T> & dst, int nthreads = 1);
     template <typename T> bool scale_nn_isotropic_2d(int snx, int sny, const T * src, float s, int & dnx, int & dny, std::vector<T> & dst);
-    template <typename T> bool scale_nn_isotropic_3d(int snx, int sny, int snz, const T * src, float s, int & dnx, int & dny, int & dnz, std::vector<T> & dst, int nthreads = 1);
 
     template <typename T> bool scale_li_2d(int snx, int sny, const T * src, float sx, float sy, int & dnx, int & dny, std::vector<T> & dst);
+    template <typename T> bool scale_li_isotropic_2d(int snx, int sny, const T * src, float s, int & dnx, int & dny, std::vector<T> & dst);
+
+    //
+    // Multi-threaded operations (to enable, define GGIMG_MT before including this header)
+    //
+
+    template <typename T> bool convolve_3d(int nx, int ny, int nz, const T * src, T * dst, int nk, const float * k, int nthreads = 1, int nw = 0, T * work = nullptr, bool wzero = true);
+    template <typename T> bool gaussian_filter_3d(int nx, int ny, int nz, const T * src, T * dst, float sigma, int nthreads = 1, int nw = 0, T * work = nullptr, bool wzero = true);
+    template <typename T> bool median_filter_3d(int nx, int ny, int nz, const T * src, T * dst, int k, int nthreads = 1, int nw = 0, int * work = nullptr, bool wzero = true);
+
+    template <typename T> bool scale_nn_3d(int snx, int sny, int snz, const T * src, float sx, float sy, float sz, int & dnx, int & dny, int & dnz, std::vector<T> & dst, int nthreads = 1);
+    template <typename T> bool scale_nn_isotropic_3d(int snx, int sny, int snz, const T * src, float s, int & dnx, int & dny, int & dnz, std::vector<T> & dst, int nthreads = 1);
+
     template <typename T> bool scale_li_3d(int snx, int sny, int snz, const T * src, float sx, float sy, float sz, int & dnx, int & dny, int & dnz, std::vector<T> & dst, int nthreads = 1);
-    template <typename T> bool scale_li_isotropic_3d(int snx, int sny, const T * src, float s, int & dnx, int & dny, std::vector<T> & dst);
     template <typename T> bool scale_li_isotropic_3d(int snx, int sny, int snz, const T * src, float s, int & dnx, int & dny, int & dnz, std::vector<T> & dst, int nthreads = 1);
+
+}
+
+//
+// Single-threaded operations
+//
+
+namespace ggimg {
+
+    //
+    // Implementation
+    //
 
     /*! \brief RGB image to Rec. 601 luminance image */
     template <typename TSrc, typename TDst>
@@ -682,165 +702,6 @@ namespace ggimg {
         }
 
     template <typename T>
-        bool convolve_3d(int nx, int ny, int nz, const T * src, T * dst, int nk, const float * k, int nthreads, int nw, T * work, bool wzero) {
-            if (nx <= 0 || ny <= 0 || nz <= 0) return false;
-            if (src == nullptr || dst == nullptr) return false;
-            if (k == nullptr) return false;
-            if (nk < 3) return false;
-            if (nk % 2 == 0) return false;
-            if (nthreads < 1) return false;
-
-            int n = nx*ny*nz;
-            if (n <= 1) return false;
-
-            float inorm = 0.0;
-            for (int i = 0; i < nk; ++i) {
-                inorm += k[i];
-            }
-            if (std::fabs(inorm) < 1e-3) return false;
-            inorm = 1.0/inorm;
-
-            int kw = nk/2;
-            int nx1 = nx + 2*kw;
-            int ny1 = ny + 2*kw;
-            int nz1 = nz + 2*kw;
-            int n1 = nx1*ny1*nz1;
-
-            bool wdelete = false;
-            if (work == nullptr) {
-                wdelete = true;
-                work = new T[2*n1];
-                wzero = true;
-            } else if (nw < 2*n1) {
-                return false;
-            }
-
-            T * tmp0 = work;
-            T * tmp1 = work + n1;
-
-            if (wzero) {
-                for (int iz = 0; iz < nz1; ++iz) {
-                    for (int iy = 0; iy < ny1; ++iy) {
-                        for (int ix = 0; ix < kw; ++ix) {
-                            tmp0[iz*ny1*nx1 + iy*nx1 + ix] = 0;
-                            tmp0[iz*ny1*nx1 + iy*nx1 + (nx1 - ix - 1)] = 0;
-                            tmp1[iz*ny1*nx1 + iy*nx1 + ix] = 0;
-                            tmp1[iz*ny1*nx1 + iy*nx1 + (nx1 - ix - 1)] = 0;
-                        }
-                    }
-                }
-
-                for (int iz = 0; iz < nz1; ++iz) {
-                    for (int iy = 0; iy < kw; ++iy) {
-                        for (int ix = 0; ix < nx1; ++ix) {
-                            tmp0[iz*ny1*nx1 + iy*nx1 + ix] = 0;
-                            tmp0[iz*ny1*nx1 + (ny1 - iy - 1)*nx1 + ix] = 0;
-                            tmp1[iz*ny1*nx1 + iy*nx1 + ix] = 0;
-                            tmp1[iz*ny1*nx1 + (ny1 - iy - 1)*nx1 + ix] = 0;
-                        }
-                    }
-                }
-
-                for (int iz = 0; iz < kw; ++iz) {
-                    for (int iy = 0; iy < ny1; ++iy) {
-                        for (int ix = 0; ix < nx1; ++ix) {
-                            tmp0[iz*ny1*nx1 + iy*nx1 + ix] = 0;
-                            tmp0[(nz1 - iz - 1)*ny1*nx1 + iy*nx1 + ix] = 0;
-                            tmp1[iz*ny1*nx1 + iy*nx1 + ix] = 0;
-                            tmp1[(nz1 - iz - 1)*ny1*nx1 + iy*nx1 + ix] = 0;
-                        }
-                    }
-                }
-            }
-
-            for (int iz = 0; iz < nz; ++iz) {
-                for (int iy = 0; iy < ny; ++iy) {
-                    for (int ix = 0; ix < nx; ++ix) {
-                        tmp0[(iz + kw)*ny1*nx1 + (iy + kw)*nx1 + (ix + kw)] = src[iz*ny*nx + iy*nx + ix];
-                    }
-                }
-            }
-
-            // x
-            {
-                std::atomic<int> curz(kw);
-                std::vector<std::thread> workers(nthreads);
-                for (auto & worker : workers) {
-                    worker = std::thread([&curz, nx, ny, nz, kw, tmp0, tmp1, nx1, ny1, nz1, inorm, k]() {
-                        while (true) {
-                            int iz = curz.fetch_add(1);
-                            if (iz >= nz + kw) break;
-                            for (int iy = kw; iy < ny + kw; ++iy) {
-                                for (int ix = kw; ix < nx + kw; ++ix) {
-                                    float v = 0.0;
-                                    for (int ik = -kw; ik <= kw; ++ik) {
-                                        v += tmp0[iz*ny1*nx1 + iy*nx1 + (ix + ik)]*k[ik + kw];
-                                    }
-                                    tmp1[iz*ny1*nx1 + iy*nx1 + ix] = v*inorm;
-                                }
-                            }
-                        }
-                    });
-                }
-                for (auto & worker : workers) worker.join();
-            }
-
-            // y
-            {
-                std::atomic<int> curz(kw);
-                std::vector<std::thread> workers(nthreads);
-                for (auto & worker : workers) {
-                    worker = std::thread([&curz, nx, ny, nz, kw, tmp0, tmp1, nx1, ny1, nz1, inorm, k]() {
-                        while (true) {
-                            int iz = curz.fetch_add(1);
-                            if (iz >= nz + kw) break;
-                            for (int ix = kw; ix < nx + kw; ++ix) {
-                                for (int iy = kw; iy < ny + kw; ++iy) {
-                                    float v = 0.0;
-                                    for (int ik = -kw; ik <= kw; ++ik) {
-                                        v += tmp1[iz*ny1*nx1 + (iy + ik)*nx1 + ix]*k[ik + kw];
-                                    }
-                                    tmp0[iz*ny1*nx1 + iy*nx1 + ix] = v*inorm;
-                                }
-                            }
-                        }
-                    });
-                }
-                for (auto & worker : workers) worker.join();
-            }
-
-            // z
-            {
-                std::atomic<int> cury(kw);
-                std::vector<std::thread> workers(nthreads);
-                for (auto & worker : workers) {
-                    worker = std::thread([&cury, nx, ny, nz, kw, tmp0, dst, nx1, ny1, nz1, inorm, k]() {
-                        while (true) {
-                            int iy = cury.fetch_add(1);
-                            if (iy >= ny + kw) break;
-                            for (int ix = kw; ix < nx + kw; ++ix) {
-                                for (int iz = kw; iz < nz + kw; ++iz) {
-                                    float v = 0.0;
-                                    for (int ik = -kw; ik <= kw; ++ik) {
-                                        v += tmp0[(iz + ik)*ny1*nx1 + iy*nx1 + ix]*k[ik + kw];
-                                    }
-                                    dst[(iz - kw)*ny*nx + (iy - kw)*nx + (ix - kw)] = v*inorm;
-                                }
-                            }
-                        }
-                    });
-                }
-                for (auto & worker : workers) worker.join();
-            }
-
-            if (wdelete) {
-                delete [] work;
-            }
-
-            return true;
-        }
-
-    template <typename T>
         bool gaussian_filter_2d(int nx, int ny, const T * src, T * dst, float sigma, int nw, T * work, bool wzero) {
             if (sigma <= 0.0) {
                 for (int i = 0; i < nx*ny; ++i) dst[i] = src[i];
@@ -857,25 +718,6 @@ namespace ggimg {
             k[nk] = 1;
 
             return convolve_2d(nx, ny, src, dst, k.size(), k.data(), nw, work, wzero);
-        }
-
-    template <typename T>
-        bool gaussian_filter_3d(int nx, int ny, int nz, const T * src, T * dst, float sigma, int nthreads, int nw, T * work, bool wzero) {
-            if (sigma <= 0.0) {
-                for (int i = 0; i < nx*ny*nz; ++i) dst[i] = src[i];
-                return true;
-            }
-
-            int nk = std::max(1.0, std::sqrt(-2.0*std::log(0.10))*sigma);
-
-            std::vector<float> k(2*nk + 1);
-            for (int i = 1; i <= nk; ++i) {
-                float x = std::exp(-(i*i)/(2.0*sigma*sigma));
-                k[nk - i] = k[nk + i] = x;
-            }
-            k[nk] = 1;
-
-            return convolve_3d(nx, ny, nz, src, dst, k.size(), k.data(), nthreads, nw, work, wzero);
         }
 
     template <typename T>
@@ -934,100 +776,8 @@ namespace ggimg {
         }
 
     template <typename T>
-        bool scale_li_3d(int snx, int sny, int snz, const T * src, float sx, float sy, float sz, int & dnx, int & dny, int & dnz, std::vector<T> & dst, int nthreads) {
-            if (snx <= 0) return false;
-            if (sny <= 0) return false;
-            if (snz <= 0) return false;
-            if (src == nullptr) return false;
-            if (sx <= 0.0f) return false;
-            if (sy <= 0.0f) return false;
-            if (sz <= 0.0f) return false;
-
-            if (src == dst.data()) return false;
-
-            dnx = std::round(snx*sx);
-            dny = std::round(sny*sy);
-            dnz = std::round(snz*sz);
-
-            if (dnx <= 0) return false;
-            if (dny <= 0) return false;
-            if (dnz <= 0) return false;
-
-            dst.resize(dnx*dny*dnz);
-
-            {
-                std::atomic<int> curz(0);
-                std::vector<std::thread> workers(nthreads);
-                for (auto & worker : workers) {
-                    worker = std::thread([&curz, snx, sny, snz, src, dnx, dny, dnz, &dst]() {
-                        float cx = ((float)(snx))/dnx;
-                        float cy = ((float)(sny))/dny;
-                        float cz = ((float)(snz))/dnz;
-
-                        while (true) {
-                            int iz = curz.fetch_add(1);
-                            if (iz >= dnz) break;
-                            float fz = ((float)(iz) + 0.5f)*cz;
-
-                            int iz1 = (int)(fz + 0.5f);
-                            int iz0 = iz1 - 1;
-                            if (iz0 < 0) ++iz0;
-                            if (iz1 >= snz) --iz1;
-                            fz -= (0.5f + (float)(iz0));
-                            for (int iy = 0; iy < dny; ++iy) {
-                                float fy = ((float)(iy) + 0.5f)*cy;
-
-                                int iy1 = (int)(fy + 0.5f);
-                                int iy0 = iy1 - 1;
-                                if (iy0 < 0) ++iy0;
-                                if (iy1 >= sny) --iy1;
-                                fy -= (0.5f + (float)(iy0));
-                                for (int ix = 0; ix < dnx; ++ix) {
-                                    float fx = ((float)(ix) + 0.5f)*cx;
-
-                                    int ix1 = (int)(fx + 0.5f);
-                                    int ix0 = ix1 - 1;
-                                    if (ix0 < 0) ++ix0;
-                                    if (ix1 >= snx) --ix1;
-                                    fx -= (0.5f + (float)(ix0));
-
-                                    auto v000 = src[iz0*sny*snx + iy0*snx + ix0];
-                                    auto v001 = src[iz0*sny*snx + iy0*snx + ix1];
-                                    auto v010 = src[iz0*sny*snx + iy1*snx + ix0];
-                                    auto v011 = src[iz0*sny*snx + iy1*snx + ix1];
-                                    auto v100 = src[iz1*sny*snx + iy0*snx + ix0];
-                                    auto v101 = src[iz1*sny*snx + iy0*snx + ix1];
-                                    auto v110 = src[iz1*sny*snx + iy1*snx + ix0];
-                                    auto v111 = src[iz1*sny*snx + iy1*snx + ix1];
-
-                                    auto v00 = v000 + fz*(v100 - v000);
-                                    auto v01 = v001 + fz*(v101 - v001);
-                                    auto v10 = v010 + fz*(v110 - v010);
-                                    auto v11 = v011 + fz*(v111 - v011);
-
-                                    auto v0 = v00 + fy*(v10 - v00);
-                                    auto v1 = v01 + fy*(v11 - v01);
-
-                                    dst[iz*dny*dnx + iy*dnx + ix] = v0 + fx*(v1 - v0);
-                                }
-                            }
-                        }
-                    });
-                }
-                for (auto & worker : workers) worker.join();
-            }
-
-            return true;
-        }
-
-    template <typename T>
         bool scale_li_isotropic_2d(int snx, int sny, const T * src, float s, int & dnx, int & dny, std::vector<T> & dst) {
             return scale_li_2d(snx, sny, src, s, s, dnx, dny, dst);
-        }
-
-    template <typename T>
-        bool scale_li_isotropic_3d(int snx, int sny, int snz, const T * src, float s, int & dnx, int & dny, int & dnz, std::vector<T> & dst, int nthreads) {
-            return scale_li_3d(snx, sny, snz, src, s, s, s, dnx, dny, dnz, dst, nthreads);
         }
 
     template <typename T>
@@ -1068,72 +818,8 @@ namespace ggimg {
         }
 
     template <typename T>
-        bool scale_nn_3d(int snx, int sny, int snz, const T * src, float sx, float sy, float sz, int & dnx, int & dny, int & dnz, std::vector<T> & dst, int nthreads) {
-            if (snx <= 0) return false;
-            if (sny <= 0) return false;
-            if (snz <= 0) return false;
-            if (src == nullptr) return false;
-            if (sx <= 0.0f) return false;
-            if (sy <= 0.0f) return false;
-            if (sz <= 0.0f) return false;
-
-            if (src == dst.data()) return false;
-
-            dnx = std::round(snx*sx);
-            dny = std::round(sny*sy);
-            dnz = std::round(snz*sz);
-
-            if (dnx <= 0) return false;
-            if (dny <= 0) return false;
-            if (dnz <= 0) return false;
-
-            dst.resize(dnx*dny*dnz);
-
-            {
-                std::atomic<int> curz(0);
-                std::vector<std::thread> workers(nthreads);
-                for (auto & worker : workers) {
-                    worker = std::thread([&curz, snx, sny, snz, src, dnx, dny, dnz, &dst]() {
-                        float cx = ((float)(snx))/dnx;
-                        float cy = ((float)(sny))/dny;
-                        float cz = ((float)(snz))/dnz;
-
-                        while (true) {
-                            int iz = curz.fetch_add(1);
-                            if (iz >= dnz) break;
-                            float fz = ((float)(iz) + 0.5f)*cz;
-
-                            int iz0 = std::round(fz - 0.5f);
-                            for (int iy = 0; iy < dny; ++iy) {
-                                float fy = ((float)(iy) + 0.5f)*cy;
-
-                                int iy0 = std::round(fy - 0.5f);
-                                fy -= (0.5f + (float)(iy0));
-                                for (int ix = 0; ix < dnx; ++ix) {
-                                    float fx = ((float)(ix) + 0.5f)*cx;
-
-                                    int ix0 = std::round(fx - 0.5f);
-
-                                    dst[iz*dny*dnx + iy*dnx + ix] = src[iz0*sny*snx + iy0*snx + ix0];
-                                }
-                            }
-                        }
-                    });
-                }
-                for (auto & worker : workers) worker.join();
-            }
-
-            return true;
-        }
-
-    template <typename T>
         bool scale_nn_isotropic_2d(int snx, int sny, const T * src, float s, int & dnx, int & dny, std::vector<T> & dst) {
             return scale_nn_2d(snx, sny, src, s, s, dnx, dny, dst);
-        }
-
-    template <typename T>
-        bool scale_nn_isotropic_3d(int snx, int sny, int snz, const T * src, float s, int & dnx, int & dny, int & dnz, std::vector<T> & dst, int nthreads) {
-            return scale_nn_3d(snx, sny, snz, src, s, s, s, dnx, dny, dnz, dst, nthreads);
         }
 
     template <>
@@ -1354,4 +1040,353 @@ namespace ggimg {
 
             return true;
         }
+
 }
+
+#ifdef GGIMG_MT
+
+//
+// Multi-threaded operations
+//
+
+#include <atomic>
+#include <thread>
+
+namespace ggimg {
+    template <typename T>
+        bool convolve_3d(int nx, int ny, int nz, const T * src, T * dst, int nk, const float * k, int nthreads, int nw, T * work, bool wzero) {
+            if (nx <= 0 || ny <= 0 || nz <= 0) return false;
+            if (src == nullptr || dst == nullptr) return false;
+            if (k == nullptr) return false;
+            if (nk < 3) return false;
+            if (nk % 2 == 0) return false;
+            if (nthreads < 1) return false;
+
+            int n = nx*ny*nz;
+            if (n <= 1) return false;
+
+            float inorm = 0.0;
+            for (int i = 0; i < nk; ++i) {
+                inorm += k[i];
+            }
+            if (std::fabs(inorm) < 1e-3) return false;
+            inorm = 1.0/inorm;
+
+            int kw = nk/2;
+            int nx1 = nx + 2*kw;
+            int ny1 = ny + 2*kw;
+            int nz1 = nz + 2*kw;
+            int n1 = nx1*ny1*nz1;
+
+            bool wdelete = false;
+            if (work == nullptr) {
+                wdelete = true;
+                work = new T[2*n1];
+                wzero = true;
+            } else if (nw < 2*n1) {
+                return false;
+            }
+
+            T * tmp0 = work;
+            T * tmp1 = work + n1;
+
+            if (wzero) {
+                for (int iz = 0; iz < nz1; ++iz) {
+                    for (int iy = 0; iy < ny1; ++iy) {
+                        for (int ix = 0; ix < kw; ++ix) {
+                            tmp0[iz*ny1*nx1 + iy*nx1 + ix] = 0;
+                            tmp0[iz*ny1*nx1 + iy*nx1 + (nx1 - ix - 1)] = 0;
+                            tmp1[iz*ny1*nx1 + iy*nx1 + ix] = 0;
+                            tmp1[iz*ny1*nx1 + iy*nx1 + (nx1 - ix - 1)] = 0;
+                        }
+                    }
+                }
+
+                for (int iz = 0; iz < nz1; ++iz) {
+                    for (int iy = 0; iy < kw; ++iy) {
+                        for (int ix = 0; ix < nx1; ++ix) {
+                            tmp0[iz*ny1*nx1 + iy*nx1 + ix] = 0;
+                            tmp0[iz*ny1*nx1 + (ny1 - iy - 1)*nx1 + ix] = 0;
+                            tmp1[iz*ny1*nx1 + iy*nx1 + ix] = 0;
+                            tmp1[iz*ny1*nx1 + (ny1 - iy - 1)*nx1 + ix] = 0;
+                        }
+                    }
+                }
+
+                for (int iz = 0; iz < kw; ++iz) {
+                    for (int iy = 0; iy < ny1; ++iy) {
+                        for (int ix = 0; ix < nx1; ++ix) {
+                            tmp0[iz*ny1*nx1 + iy*nx1 + ix] = 0;
+                            tmp0[(nz1 - iz - 1)*ny1*nx1 + iy*nx1 + ix] = 0;
+                            tmp1[iz*ny1*nx1 + iy*nx1 + ix] = 0;
+                            tmp1[(nz1 - iz - 1)*ny1*nx1 + iy*nx1 + ix] = 0;
+                        }
+                    }
+                }
+            }
+
+            for (int iz = 0; iz < nz; ++iz) {
+                for (int iy = 0; iy < ny; ++iy) {
+                    for (int ix = 0; ix < nx; ++ix) {
+                        tmp0[(iz + kw)*ny1*nx1 + (iy + kw)*nx1 + (ix + kw)] = src[iz*ny*nx + iy*nx + ix];
+                    }
+                }
+            }
+
+            // x
+            {
+                std::atomic<int> curz(kw);
+                std::vector<std::thread> workers(nthreads);
+                for (auto & worker : workers) {
+                    worker = std::thread([&curz, nx, ny, nz, kw, tmp0, tmp1, nx1, ny1, nz1, inorm, k]() {
+                        while (true) {
+                            int iz = curz.fetch_add(1);
+                            if (iz >= nz + kw) break;
+                            for (int iy = kw; iy < ny + kw; ++iy) {
+                                for (int ix = kw; ix < nx + kw; ++ix) {
+                                    float v = 0.0;
+                                    for (int ik = -kw; ik <= kw; ++ik) {
+                                        v += tmp0[iz*ny1*nx1 + iy*nx1 + (ix + ik)]*k[ik + kw];
+                                    }
+                                    tmp1[iz*ny1*nx1 + iy*nx1 + ix] = v*inorm;
+                                }
+                            }
+                        }
+                    });
+                }
+                for (auto & worker : workers) worker.join();
+            }
+
+            // y
+            {
+                std::atomic<int> curz(kw);
+                std::vector<std::thread> workers(nthreads);
+                for (auto & worker : workers) {
+                    worker = std::thread([&curz, nx, ny, nz, kw, tmp0, tmp1, nx1, ny1, nz1, inorm, k]() {
+                        while (true) {
+                            int iz = curz.fetch_add(1);
+                            if (iz >= nz + kw) break;
+                            for (int ix = kw; ix < nx + kw; ++ix) {
+                                for (int iy = kw; iy < ny + kw; ++iy) {
+                                    float v = 0.0;
+                                    for (int ik = -kw; ik <= kw; ++ik) {
+                                        v += tmp1[iz*ny1*nx1 + (iy + ik)*nx1 + ix]*k[ik + kw];
+                                    }
+                                    tmp0[iz*ny1*nx1 + iy*nx1 + ix] = v*inorm;
+                                }
+                            }
+                        }
+                    });
+                }
+                for (auto & worker : workers) worker.join();
+            }
+
+            // z
+            {
+                std::atomic<int> cury(kw);
+                std::vector<std::thread> workers(nthreads);
+                for (auto & worker : workers) {
+                    worker = std::thread([&cury, nx, ny, nz, kw, tmp0, dst, nx1, ny1, nz1, inorm, k]() {
+                        while (true) {
+                            int iy = cury.fetch_add(1);
+                            if (iy >= ny + kw) break;
+                            for (int ix = kw; ix < nx + kw; ++ix) {
+                                for (int iz = kw; iz < nz + kw; ++iz) {
+                                    float v = 0.0;
+                                    for (int ik = -kw; ik <= kw; ++ik) {
+                                        v += tmp0[(iz + ik)*ny1*nx1 + iy*nx1 + ix]*k[ik + kw];
+                                    }
+                                    dst[(iz - kw)*ny*nx + (iy - kw)*nx + (ix - kw)] = v*inorm;
+                                }
+                            }
+                        }
+                    });
+                }
+                for (auto & worker : workers) worker.join();
+            }
+
+            if (wdelete) {
+                delete [] work;
+            }
+
+            return true;
+        }
+
+    template <typename T>
+        bool gaussian_filter_3d(int nx, int ny, int nz, const T * src, T * dst, float sigma, int nthreads, int nw, T * work, bool wzero) {
+            if (sigma <= 0.0) {
+                for (int i = 0; i < nx*ny*nz; ++i) dst[i] = src[i];
+                return true;
+            }
+
+            int nk = std::max(1.0, std::sqrt(-2.0*std::log(0.10))*sigma);
+
+            std::vector<float> k(2*nk + 1);
+            for (int i = 1; i <= nk; ++i) {
+                float x = std::exp(-(i*i)/(2.0*sigma*sigma));
+                k[nk - i] = k[nk + i] = x;
+            }
+            k[nk] = 1;
+
+            return convolve_3d(nx, ny, nz, src, dst, k.size(), k.data(), nthreads, nw, work, wzero);
+        }
+
+    template <typename T>
+        bool scale_li_3d(int snx, int sny, int snz, const T * src, float sx, float sy, float sz, int & dnx, int & dny, int & dnz, std::vector<T> & dst, int nthreads) {
+            if (snx <= 0) return false;
+            if (sny <= 0) return false;
+            if (snz <= 0) return false;
+            if (src == nullptr) return false;
+            if (sx <= 0.0f) return false;
+            if (sy <= 0.0f) return false;
+            if (sz <= 0.0f) return false;
+
+            if (src == dst.data()) return false;
+
+            dnx = std::round(snx*sx);
+            dny = std::round(sny*sy);
+            dnz = std::round(snz*sz);
+
+            if (dnx <= 0) return false;
+            if (dny <= 0) return false;
+            if (dnz <= 0) return false;
+
+            dst.resize(dnx*dny*dnz);
+
+            {
+                std::atomic<int> curz(0);
+                std::vector<std::thread> workers(nthreads);
+                for (auto & worker : workers) {
+                    worker = std::thread([&curz, snx, sny, snz, src, dnx, dny, dnz, &dst]() {
+                        float cx = ((float)(snx))/dnx;
+                        float cy = ((float)(sny))/dny;
+                        float cz = ((float)(snz))/dnz;
+
+                        while (true) {
+                            int iz = curz.fetch_add(1);
+                            if (iz >= dnz) break;
+                            float fz = ((float)(iz) + 0.5f)*cz;
+
+                            int iz1 = (int)(fz + 0.5f);
+                            int iz0 = iz1 - 1;
+                            if (iz0 < 0) ++iz0;
+                            if (iz1 >= snz) --iz1;
+                            fz -= (0.5f + (float)(iz0));
+                            for (int iy = 0; iy < dny; ++iy) {
+                                float fy = ((float)(iy) + 0.5f)*cy;
+
+                                int iy1 = (int)(fy + 0.5f);
+                                int iy0 = iy1 - 1;
+                                if (iy0 < 0) ++iy0;
+                                if (iy1 >= sny) --iy1;
+                                fy -= (0.5f + (float)(iy0));
+                                for (int ix = 0; ix < dnx; ++ix) {
+                                    float fx = ((float)(ix) + 0.5f)*cx;
+
+                                    int ix1 = (int)(fx + 0.5f);
+                                    int ix0 = ix1 - 1;
+                                    if (ix0 < 0) ++ix0;
+                                    if (ix1 >= snx) --ix1;
+                                    fx -= (0.5f + (float)(ix0));
+
+                                    auto v000 = src[iz0*sny*snx + iy0*snx + ix0];
+                                    auto v001 = src[iz0*sny*snx + iy0*snx + ix1];
+                                    auto v010 = src[iz0*sny*snx + iy1*snx + ix0];
+                                    auto v011 = src[iz0*sny*snx + iy1*snx + ix1];
+                                    auto v100 = src[iz1*sny*snx + iy0*snx + ix0];
+                                    auto v101 = src[iz1*sny*snx + iy0*snx + ix1];
+                                    auto v110 = src[iz1*sny*snx + iy1*snx + ix0];
+                                    auto v111 = src[iz1*sny*snx + iy1*snx + ix1];
+
+                                    auto v00 = v000 + fz*(v100 - v000);
+                                    auto v01 = v001 + fz*(v101 - v001);
+                                    auto v10 = v010 + fz*(v110 - v010);
+                                    auto v11 = v011 + fz*(v111 - v011);
+
+                                    auto v0 = v00 + fy*(v10 - v00);
+                                    auto v1 = v01 + fy*(v11 - v01);
+
+                                    dst[iz*dny*dnx + iy*dnx + ix] = v0 + fx*(v1 - v0);
+                                }
+                            }
+                        }
+                    });
+                }
+                for (auto & worker : workers) worker.join();
+            }
+
+            return true;
+        }
+
+    template <typename T>
+        bool scale_li_isotropic_3d(int snx, int sny, int snz, const T * src, float s, int & dnx, int & dny, int & dnz, std::vector<T> & dst, int nthreads) {
+            return scale_li_3d(snx, sny, snz, src, s, s, s, dnx, dny, dnz, dst, nthreads);
+        }
+
+    template <typename T>
+        bool scale_nn_3d(int snx, int sny, int snz, const T * src, float sx, float sy, float sz, int & dnx, int & dny, int & dnz, std::vector<T> & dst, int nthreads) {
+            if (snx <= 0) return false;
+            if (sny <= 0) return false;
+            if (snz <= 0) return false;
+            if (src == nullptr) return false;
+            if (sx <= 0.0f) return false;
+            if (sy <= 0.0f) return false;
+            if (sz <= 0.0f) return false;
+
+            if (src == dst.data()) return false;
+
+            dnx = std::round(snx*sx);
+            dny = std::round(sny*sy);
+            dnz = std::round(snz*sz);
+
+            if (dnx <= 0) return false;
+            if (dny <= 0) return false;
+            if (dnz <= 0) return false;
+
+            dst.resize(dnx*dny*dnz);
+
+            {
+                std::atomic<int> curz(0);
+                std::vector<std::thread> workers(nthreads);
+                for (auto & worker : workers) {
+                    worker = std::thread([&curz, snx, sny, snz, src, dnx, dny, dnz, &dst]() {
+                        float cx = ((float)(snx))/dnx;
+                        float cy = ((float)(sny))/dny;
+                        float cz = ((float)(snz))/dnz;
+
+                        while (true) {
+                            int iz = curz.fetch_add(1);
+                            if (iz >= dnz) break;
+                            float fz = ((float)(iz) + 0.5f)*cz;
+
+                            int iz0 = std::round(fz - 0.5f);
+                            for (int iy = 0; iy < dny; ++iy) {
+                                float fy = ((float)(iy) + 0.5f)*cy;
+
+                                int iy0 = std::round(fy - 0.5f);
+                                fy -= (0.5f + (float)(iy0));
+                                for (int ix = 0; ix < dnx; ++ix) {
+                                    float fx = ((float)(ix) + 0.5f)*cx;
+
+                                    int ix0 = std::round(fx - 0.5f);
+
+                                    dst[iz*dny*dnx + iy*dnx + ix] = src[iz0*sny*snx + iy0*snx + ix0];
+                                }
+                            }
+                        }
+                    });
+                }
+                for (auto & worker : workers) worker.join();
+            }
+
+            return true;
+        }
+
+    template <typename T>
+        bool scale_nn_isotropic_3d(int snx, int sny, int snz, const T * src, float s, int & dnx, int & dny, int & dnz, std::vector<T> & dst, int nthreads) {
+            return scale_nn_3d(snx, sny, snz, src, s, s, s, dnx, dny, dnz, dst, nthreads);
+        }
+
+}
+
+#endif
