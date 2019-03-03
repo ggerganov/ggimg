@@ -80,6 +80,7 @@ int main(int argc, char ** argv) {
     Image2D img_normalize;
     Image2D img_normalize_hist;
     Image2D img_gaussian_filter;
+    Image2D img_median_filter;
     Image2D img_gradient_x;
     Image2D img_gradient_y;
     Image2D img_gradient_xy;
@@ -176,21 +177,6 @@ int main(int argc, char ** argv) {
     }
 
     {
-        printf("[+] Gaussian filter\n");
-
-        img_gaussian_filter.resize(nx*ny);
-        if (ggimg::gaussian_filter_2d(nx, ny, img_grayscale.data(), img_gaussian_filter.data(), 3.0f) == false) {
-            printf("Failed to apply gaussian filter\n");
-            return -1;
-        }
-
-        if (write_ppm("ggimg_gaussian_filter.ppm", nx, ny, img_gaussian_filter, 1) == false) {
-            printf("Failed to write image\n");
-            return -1;
-        }
-    }
-
-    {
         printf("[+] Gradient X\n");
 
         img_gradient_x.resize(nx*ny);
@@ -230,6 +216,36 @@ int main(int argc, char ** argv) {
         }
 
         if (write_ppm("ggimg_gradient.ppm", nx, ny, img_gradient_xy, 1) == false) {
+            printf("Failed to write image\n");
+            return -1;
+        }
+    }
+
+    {
+        printf("[+] Gaussian filter\n");
+
+        img_gaussian_filter.resize(nx*ny);
+        if (ggimg::gaussian_filter_2d(nx, ny, img_grayscale.data(), img_gaussian_filter.data(), 3.0f) == false) {
+            printf("Failed to apply gaussian filter\n");
+            return -1;
+        }
+
+        if (write_ppm("ggimg_gaussian_filter.ppm", nx, ny, img_gaussian_filter, 1) == false) {
+            printf("Failed to write image\n");
+            return -1;
+        }
+    }
+
+    {
+        printf("[+] Median filter\n");
+
+        img_median_filter.resize(nx*ny);
+        if (ggimg::median_filter_2d(nx, ny, img_grayscale.data(), img_median_filter.data(), 5) == false) {
+            printf("Failed to apply median filter\n");
+            return -1;
+        }
+
+        if (write_ppm("ggimg_median_filter.ppm", nx, ny, img_median_filter, 1) == false) {
             printf("Failed to write image\n");
             return -1;
         }
