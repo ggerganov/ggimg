@@ -5,10 +5,11 @@
 
 #pragma once
 
-#include <cstdint>
-#include <cmath>
-#include <vector>
+#include <array>
 #include <algorithm>
+#include <cmath>
+#include <cstdint>
+#include <vector>
 
 namespace ggimg {
 
@@ -24,22 +25,33 @@ namespace ggimg {
     template <typename T> inline float rgb_to_luma709(T r, T g, T b) { return 0.2126f*((float)(r)) + 0.7152f*((float)(g)) + 0.0722f*((float)(b)); }
     template <typename T> inline float rgb_to_luma709(const T * p) { return rgb_to_luma709(*p, *(p + 1), *(p + 2)); }
 
-    template <typename TSrc, typename TDst> bool rgb_to_luma601_2d(int nx, int ny, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
-    template <typename TSrc, typename TDst> bool rgb_to_luma601_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
-    template <typename TSrc, typename TDst> bool rgb_to_luma709_2d(int nx, int ny, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
-    template <typename TSrc, typename TDst> bool rgb_to_luma709_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
-    template <typename TSrc, typename TDst> bool rgb_to_gray_2d(int nx, int ny, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
-    template <typename TSrc, typename TDst> bool rgb_to_gray_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
-    template <typename TSrc, typename TDst> bool rgb_to_c_2d(int nx, int ny, int c, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
-    template <typename TSrc, typename TDst> bool rgb_to_c_3d(int nx, int ny, int nz, int c, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
-    template <typename TSrc, typename TDst> bool rgb_to_r_2d(int nx, int ny, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
-    template <typename TSrc, typename TDst> bool rgb_to_r_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
-    template <typename TSrc, typename TDst> bool rgb_to_g_2d(int nx, int ny, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
-    template <typename TSrc, typename TDst> bool rgb_to_g_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
-    template <typename TSrc, typename TDst> bool rgb_to_b_2d(int nx, int ny, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
-    template <typename TSrc, typename TDst> bool rgb_to_b_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
-    template <typename TSrc, typename TDst> bool gray_to_rgb_2d(int nx, int ny, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
-    template <typename TSrc, typename TDst> bool gray_to_rgb_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
+    template <typename T> bool rgb_to_luma601_2d(int nx, int ny, const T * src, T * dst);
+    template <typename T> bool rgb_to_luma601_3d(int nx, int ny, int nz, const T * src, T * dst);
+    template <typename T> bool rgb_to_luma709_2d(int nx, int ny, const T * src, T * dst);
+    template <typename T> bool rgb_to_luma709_3d(int nx, int ny, int nz, const T * src, T * dst);
+    template <typename T> bool rgb_to_gray_2d(int nx, int ny, const T * src, T * dst);
+    template <typename T> bool rgb_to_gray_3d(int nx, int ny, int nz, const T * src, T * dst);
+    template <typename T> bool rgb_to_c_2d(int nx, int ny, int c, const T * src, T * dst);
+    template <typename T> bool rgb_to_c_3d(int nx, int ny, int nz, int c, const T * src, T * dst);
+    template <typename T> bool rgb_to_r_2d(int nx, int ny, const T * src, T * dst);
+    template <typename T> bool rgb_to_r_3d(int nx, int ny, int nz, const T * src, T * dst);
+    template <typename T> bool rgb_to_g_2d(int nx, int ny, const T * src, T * dst);
+    template <typename T> bool rgb_to_g_3d(int nx, int ny, int nz, const T * src, T * dst);
+    template <typename T> bool rgb_to_b_2d(int nx, int ny, const T * src, T * dst);
+    template <typename T> bool rgb_to_b_3d(int nx, int ny, int nz, const T * src, T * dst);
+    template <typename T> bool c_to_rgb_2d(int nx, int ny, int c, const T * src, T * dst);
+    template <typename T> bool c_to_rgb_3d(int nx, int ny, int nz, int c, const T * src, T * dst);
+    template <typename T> bool r_to_rgb_2d(int nx, int ny, const T * src, T * dst);
+    template <typename T> bool r_to_rgb_3d(int nx, int ny, int nz, const T * src, T * dst);
+    template <typename T> bool g_to_rgb_2d(int nx, int ny, const T * src, T * dst);
+    template <typename T> bool g_to_rgb_3d(int nx, int ny, int nz, const T * src, T * dst);
+    template <typename T> bool b_to_rgb_2d(int nx, int ny, const T * src, T * dst);
+    template <typename T> bool b_to_rgb_3d(int nx, int ny, int nz, const T * src, T * dst);
+    template <typename T> bool gray_to_rgb_2d(int nx, int ny, const T * src, T * dst);
+    template <typename T> bool gray_to_rgb_3d(int nx, int ny, int nz, const T * src, T * dst);
+
+    template <typename TSrc, typename TDst> bool convert_2d(int nx, int ny, TSrc smin, TSrc smax, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
+    template <typename TSrc, typename TDst> bool convert_3d(int nx, int ny, int nz, TSrc smin, TSrc smax, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
 
     template <typename TSrc, typename TDst> bool normalize_2d(int nx, int ny, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
     template <typename TSrc, typename TDst> bool normalize_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
@@ -64,6 +76,9 @@ namespace ggimg {
 
     template <typename T> bool scale_li_2d(int snx, int sny, const T * src, float sx, float sy, int & dnx, int & dny, std::vector<T> & dst);
     template <typename T> bool scale_li_isotropic_2d(int snx, int sny, const T * src, float s, int & dnx, int & dny, std::vector<T> & dst);
+
+    template <typename T> bool transform_homography_gray_nn(int snx, int sny, const T * src, std::array<float, 9> h, int dnx, int dny, T * dst);
+    template <typename T> bool transform_homography_rgb_nn(int snx, int sny, const T * src, std::array<float, 9> h, int dnx, int dny, T * dst);
 
     //
     // Multi-threaded operations (to enable, define GGIMG_MT before including this header)
@@ -92,173 +107,208 @@ namespace ggimg {
     //
 
     /*! \brief RGB image to Rec. 601 luminance image */
-    template <typename TSrc, typename TDst>
-        bool rgb_to_luma601_2d(int nx, int ny, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
-            return rgb_to_luma601_3d(nx, ny, 1, src, dmin, dmax, dst);
+    template <typename T>
+        bool rgb_to_luma601_2d(int nx, int ny, const T * src, T * dst) {
+            return rgb_to_luma601_3d(nx, ny, 1, src, dst);
         }
 
     /*! \brief RGB image to Rec. 601 luminance image */
-    template <typename TSrc, typename TDst>
-        bool rgb_to_luma601_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
+    template <typename T>
+        bool rgb_to_luma601_3d(int nx, int ny, int nz, const T * src, T * dst) {
             if (nx < 1) return false;
             if (ny < 1) return false;
             if (nz < 1) return false;
             if (src == nullptr || dst == nullptr) return false;
-            if (dmax < dmin) return false;
 
             int n = nx*ny*nz;
 
-            auto imin = rgb_to_luma601(src + 0);
-            auto imax = imin;
-            for (int i = 1; i < n; ++i) {
-                auto icur = rgb_to_luma601(src + 3*i);
-                if (icur > imax) imax = icur;
-                if (icur < imin) imin = icur;
-            }
-
-            float scale = (imax > imin) ? ((float)(dmax - dmin))/(imax - imin) : 1;
             for (int i = 0; i < n; ++i) {
-                dst[i] = dmin + ((float)(rgb_to_luma601(src + 3*i) - imin))*scale;
+                dst[i] = rgb_to_luma601(src + 3*i);
             }
 
             return true;
         }
 
     /*! \brief RGB image to Rec. 709 luminance image */
-    template <typename TSrc, typename TDst>
-        bool rgb_to_luma709_2d(int nx, int ny, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
-            return rgb_to_luma709_3d(nx, ny, 1, src, dmin, dmax, dst);
+    template <typename T>
+        bool rgb_to_luma709_2d(int nx, int ny, const T * src, T * dst) {
+            return rgb_to_luma709_3d(nx, ny, 1, src, dst);
         }
 
     /*! \brief RGB image to Rec. 709 luminance image */
-    template <typename TSrc, typename TDst>
-        bool rgb_to_luma709_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
+    template <typename T>
+        bool rgb_to_luma709_3d(int nx, int ny, int nz, const T * src, T * dst) {
             if (nx < 1) return false;
             if (ny < 1) return false;
             if (nz < 1) return false;
             if (src == nullptr || dst == nullptr) return false;
-            if (dmax < dmin) return false;
 
             int n = nx*ny*nz;
 
-            auto imin = rgb_to_luma709(src + 0);
-            auto imax = imin;
-            for (int i = 1; i < n; ++i) {
-                auto icur = rgb_to_luma709(src + 3*i);
-                if (icur > imax) imax = icur;
-                if (icur < imin) imin = icur;
-            }
-
-            float scale = (imax > imin) ? ((float)(dmax - dmin))/(imax - imin) : 1;
             for (int i = 0; i < n; ++i) {
-                dst[i] = dmin + ((float)(rgb_to_luma709(src + 3*i) - imin))*scale;
+                dst[i] = rgb_to_luma709(src + 3*i);
             }
 
             return true;
         }
 
     /*! \brief RGB image to grayscale image */
-    template <typename TSrc, typename TDst>
-        bool rgb_to_gray_2d(int nx, int ny, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
-            return rgb_to_gray_3d(nx, ny, 1, src, dmin, dmax, dst);
+    template <typename T>
+        bool rgb_to_gray_2d(int nx, int ny, const T * src, T * dst) {
+            return rgb_to_gray_3d(nx, ny, 1, src, dst);
         }
 
     /*! \brief RGB image to grayscale image */
-    template <typename TSrc, typename TDst>
-        bool rgb_to_gray_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
-            return rgb_to_luma709_3d(nx, ny, nz, src, dmin, dmax, dst);
+    template <typename T>
+        bool rgb_to_gray_3d(int nx, int ny, int nz, const T * src, T * dst) {
+            return rgb_to_luma709_3d(nx, ny, nz, src, dst);
         }
 
-    template <typename TSrc, typename TDst>
-        bool rgb_to_c_2d(int nx, int ny, int c, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
-            return rgb_to_c_2d(nx, ny, 1, c, src, dmin, dmax, dst);
+    template <typename T>
+        bool rgb_to_c_2d(int nx, int ny, int c, const T * src, T * dst) {
+            return rgb_to_c_3d(nx, ny, 1, c, src, dst);
         }
 
-    template <typename TSrc, typename TDst>
-        bool rgb_to_c_3d(int nx, int ny, int nz, int c, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
+    template <typename T>
+        bool rgb_to_c_3d(int nx, int ny, int nz, int c, const T * src, T * dst) {
             if (nx < 1) return false;
             if (ny < 1) return false;
             if (nz < 1) return false;
             if (src == nullptr || dst == nullptr) return false;
-            if (dmax < dmin) return false;
 
             int n = nx*ny*nz;
 
-            auto imin = src[c];
-            auto imax = imin;
-            for (int i = 1; i < n; ++i) {
-                auto icur = src[3*i + c];
-                if (icur > imax) imax = icur;
-                if (icur < imin) imin = icur;
-            }
-
-            float scale = (imax > imin) ? ((float)(dmax - dmin))/(imax - imin) : 1;
             for (int i = 0; i < n; ++i) {
-                dst[i] = dmin + ((float)(src[3*i + c] - imin))*scale;
+                dst[i] = src[3*i + c];
             }
 
             return true;
         }
 
-    template <typename TSrc, typename TDst>
-        bool rgb_to_r_2d(int nx, int ny, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
-            return rgb_to_c_2d(nx, ny, 0, src, dmin, dmax, dst);
+    template <typename T>
+        bool rgb_to_r_2d(int nx, int ny, const T * src, T * dst) {
+            return rgb_to_c_2d(nx, ny, 0, src, dst);
         }
 
-    template <typename TSrc, typename TDst>
-        bool rgb_to_r_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
-            return rgb_to_c_3d(nx, ny, nz, 0, src, dmin, dmax, dst);
+    template <typename T>
+        bool rgb_to_r_3d(int nx, int ny, int nz, const T * src, T * dst) {
+            return rgb_to_c_3d(nx, ny, nz, 0, src, dst);
         }
 
-    template <typename TSrc, typename TDst>
-        bool rgb_to_g_2d(int nx, int ny, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
-            return rgb_to_c_2d(nx, ny, 1, src, dmin, dmax, dst);
+    template <typename T>
+        bool rgb_to_g_2d(int nx, int ny, const T * src, T * dst) {
+            return rgb_to_c_2d(nx, ny, 1, src, dst);
         }
 
-    template <typename TSrc, typename TDst>
-        bool rgb_to_g_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
-            return rgb_to_c_3d(nx, ny, nz, 1, src, dmin, dmax, dst);
+    template <typename T>
+        bool rgb_to_g_3d(int nx, int ny, int nz, const T * src, T * dst) {
+            return rgb_to_c_3d(nx, ny, nz, 1, src, dst);
         }
 
-    template <typename TSrc, typename TDst>
-        bool rgb_to_b_2d(int nx, int ny, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
-            return rgb_to_c_2d(nx, ny, 2, src, dmin, dmax, dst);
+    template <typename T>
+        bool rgb_to_b_2d(int nx, int ny, const T * src, T * dst) {
+            return rgb_to_c_2d(nx, ny, 2, src, dst);
         }
 
-    template <typename TSrc, typename TDst>
-        bool rgb_to_b_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
-            return rgb_to_c_3d(nx, ny, nz, 2, src, dmin, dmax, dst);
+    template <typename T>
+        bool rgb_to_b_3d(int nx, int ny, int nz, const T * src, T * dst) {
+            return rgb_to_c_3d(nx, ny, nz, 2, src, dst);
         }
 
-    template <typename TSrc, typename TDst>
-        bool gray_to_rgb_2d(int nx, int ny, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
-            return gray_to_rgb_3d(nx, ny, 1, src, dmin, dmax, dst);
+    template <typename T>
+        bool c_to_rgb_2d(int nx, int ny, int c, const T * src, T * dst) {
+            return c_to_rgb_3d(nx, ny, 1, c, src, dst);
         }
 
-    template <typename TSrc, typename TDst>
-        bool gray_to_rgb_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
+    template <typename T>
+        bool c_to_rgb_3d(int nx, int ny, int nz, int c, const T * src, T * dst) {
             if (nx < 1) return false;
             if (ny < 1) return false;
             if (nz < 1) return false;
             if (src == nullptr || dst == nullptr) return false;
-            if (dmax < dmin) return false;
 
             int n = nx*ny*nz;
 
-            auto imin = src[0];
-            auto imax = imin;
-            for (int i = 1; i < n; ++i) {
-                auto icur = src[i];
-                if (icur > imax) imax = icur;
-                if (icur < imin) imin = icur;
+            for (int i = 0; i < n; ++i) {
+                dst[3*i + c] = src[i];
             }
 
-            float scale = (imax > imin) ? ((float)(dmax - dmin))/(imax - imin) : 1;
+            return true;
+        }
+
+    template <typename T>
+        bool r_to_rgb_2d(int nx, int ny, const T * src, T * dst) {
+            return c_to_rgb_2d(nx, ny, 0, src, dst);
+        }
+
+    template <typename T>
+        bool r_to_rgb_3d(int nx, int ny, int nz, const T * src, T * dst) {
+            return c_to_rgb_3d(nx, ny, nz, 0, src, dst);
+        }
+
+    template <typename T>
+        bool g_to_rgb_2d(int nx, int ny, const T * src, T * dst) {
+            return c_to_rgb_2d(nx, ny, 1, src, dst);
+        }
+
+    template <typename T>
+        bool g_to_rgb_3d(int nx, int ny, int nz, const T * src, T * dst) {
+            return c_to_rgb_3d(nx, ny, nz, 1, src, dst);
+        }
+
+    template <typename T>
+        bool b_to_rgb_2d(int nx, int ny, const T * src, T * dst) {
+            return c_to_rgb_2d(nx, ny, 2, src, dst);
+        }
+
+    template <typename T>
+        bool b_to_rgb_3d(int nx, int ny, int nz, const T * src, T * dst) {
+            return c_to_rgb_3d(nx, ny, nz, 2, src, dst);
+        }
+
+    template <typename T>
+        bool gray_to_rgb_2d(int nx, int ny, const T * src, T * dst) {
+            return gray_to_rgb_3d(nx, ny, 1, src, dst);
+        }
+
+    template <typename T>
+        bool gray_to_rgb_3d(int nx, int ny, int nz, const T * src, T * dst) {
+            if (nx < 1) return false;
+            if (ny < 1) return false;
+            if (nz < 1) return false;
+            if (src == nullptr || dst == nullptr) return false;
+
+            int n = nx*ny*nz;
+
             for (int i = 0; i < n; ++i) {
-                float v = dmin + ((float)(src[i] - imin))*scale;
+                float v = src[i];
                 dst[3*i + 0] = v;
                 dst[3*i + 1] = v;
                 dst[3*i + 2] = v;
+            }
+
+            return true;
+        }
+
+    template <typename TSrc, typename TDst>
+        bool convert_2d(int nx, int ny, TSrc smin, TSrc smax, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
+            return convert_3d(nx, ny, 1, smin, smax, src, dmin, dmax, dst);
+        }
+
+    template <typename TSrc, typename TDst>
+        bool convert_3d(int nx, int ny, int nz, TSrc smin, TSrc smax, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
+            if (nx < 1) return false;
+            if (ny < 1) return false;
+            if (nz < 1) return false;
+            if (src == nullptr || dst == nullptr) return false;
+            if (smax < smin) return false;
+            if (dmax < dmin) return false;
+
+            int n = nx*ny*nz;
+
+            float scale = (smax > smin) ? ((float)(dmax - dmin))/(smax - smin) : 1;
+            for (int i = 0; i < n; ++i) {
+                dst[i] = dmin + ((float)(src[i] - smin))*scale;
             }
 
             return true;
@@ -765,6 +815,15 @@ namespace ggimg {
                         tmp1[iy*nx1 + (nx1 - ix - 1)] = 0;
                     }
                 }
+
+                for (int iy = 0; iy < kw; ++iy) {
+                    for (int ix = 0; ix < nx1; ++ix) {
+                        tmp0[iy*nx1 + ix] = 0;
+                        tmp0[(ny1 - iy - 1)*nx1 + ix] = 0;
+                        tmp1[iy*nx1 + ix] = 0;
+                        tmp1[(ny1 - iy - 1)*nx1 + ix] = 0;
+                    }
+                }
             }
 
             for (int iy = 0; iy < ny; ++iy) {
@@ -1142,6 +1201,92 @@ namespace ggimg {
             }
 
             if (wdelete) delete [] work;
+
+            return true;
+        }
+
+    template <typename T>
+        bool transform_homography_gray_nn(int snx, int sny, const T * src, std::array<float, 9> h, int dnx, int dny, T * dst) {
+            if (snx <= 0) return false;
+            if (sny <= 0) return false;
+            if (src == nullptr) return false;
+            if (dnx <= 0) return false;
+            if (dny <= 0) return false;
+            if (dst == nullptr) return false;
+            if (src == dst) return false;
+
+            for (int y = 0; y < dny; ++y) {
+                float oy = ((float)(y) + 0.5f)/dny;
+                for (int x = 0; x < dnx; ++x) {
+                    float ox = ((float)(x) + 0.5f)/dnx;
+
+                    float tx = (h[0]*ox + h[1]*oy + h[2])/(h[6]*ox + h[7]*oy + h[8]);
+                    float ty = (h[3]*ox + h[4]*oy + h[5])/(h[6]*ox + h[7]*oy + h[8]);
+
+                    int ix = tx*snx - 0.5f;
+                    int iy = ty*sny - 0.5f;
+
+                    if (ix < 0 || ix >= snx || iy < 0 || iy >= sny) {
+                        dst[y*dnx + x] = 0;
+                    } else {
+                        dst[y*dnx + x] = src[iy*snx + ix];
+                    }
+                }
+            }
+
+            return true;
+        }
+
+    template <typename T>
+        bool transform_homography_rgb_nn(int snx, int sny, const T * src, std::array<float, 9> h, int dnx, int dny, T * dst) {
+            if (snx <= 0) return false;
+            if (sny <= 0) return false;
+            if (src == nullptr) return false;
+            if (dnx <= 0) return false;
+            if (dny <= 0) return false;
+            if (dst == nullptr) return false;
+            if (src == dst) return false;
+
+            for (int y = 0; y < dny; ++y) {
+                float oy = ((float)(y) + 0.5f)/dny;
+                for (int x = 0; x < dnx; ++x) {
+                    float ox = ((float)(x) + 0.5f)/dnx;
+
+                    float tx = (h[0]*ox + h[1]*oy + h[2])/(h[6]*ox + h[7]*oy + h[8]);
+                    float ty = (h[3]*ox + h[4]*oy + h[5])/(h[6]*ox + h[7]*oy + h[8]);
+
+                    int ix = tx*snx - 0.5f;
+                    int iy = ty*sny - 0.5f;
+
+                    if (ix < 0 || ix >= snx || iy < 0 || iy >= sny) {
+                        dst[3*(y*dnx + x) + 0] = 0;
+                        dst[3*(y*dnx + x) + 1] = 0;
+                        dst[3*(y*dnx + x) + 2] = 0;
+                    } else {
+                        dst[3*(y*dnx + x) + 0] = src[3*(iy*snx + ix) + 0];
+                        dst[3*(y*dnx + x) + 1] = src[3*(iy*snx + ix) + 1];
+                        dst[3*(y*dnx + x) + 2] = src[3*(iy*snx + ix) + 2];
+                    }
+                }
+            }
+
+            //T * work0 = new T[snx*sny];
+            //T * work1 = new T[dnx*dny];
+
+            //rgb_to_r_2d(snx, sny, src, work0);
+            //transform_homography_gray_nn(snx, sny, work0, h, dnx, dny, work1);
+            //r_to_rgb_2d(dnx, dny, work1, dst);
+
+            //rgb_to_g_2d(snx, sny, src, work0);
+            //transform_homography_gray_nn(snx, sny, work0, h, dnx, dny, work1);
+            //g_to_rgb_2d(dnx, dny, work1, dst);
+
+            //rgb_to_b_2d(snx, sny, src, work0);
+            //transform_homography_gray_nn(snx, sny, work0, h, dnx, dny, work1);
+            //b_to_rgb_2d(dnx, dny, work1, dst);
+
+            //delete [] work0;
+            //delete [] work1;
 
             return true;
         }

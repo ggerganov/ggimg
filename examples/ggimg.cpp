@@ -86,6 +86,8 @@ int main(int argc, char ** argv) {
     Image2D img_gradient_xy;
     Image2D img_scale_nn;
     Image2D img_scale_li;
+    Image2D img_transform_homography_gray_nn;
+    Image2D img_transform_homography_rgb_nn;
 
     {
         printf("[+] Read/write ppm\n");
@@ -102,200 +104,185 @@ int main(int argc, char ** argv) {
     }
 
     {
-        printf("[+] RGB -> luma 601\n");
+        printf("[+] ggimg::rgb_to_luma601\n");
 
         img_luma601.resize(nx*ny);
-        if (ggimg::rgb_to_luma601_2d(nx, ny, img_rgb.data(), (uint8_t) 0, (uint8_t) 255, img_luma601.data()) == false) {
-            printf("Failed to convert RGB to luma 601\n");
+        if (ggimg::rgb_to_luma601_2d(nx, ny, img_rgb.data(), img_luma601.data()) == false) {
+            printf("Failed ggimg::rgb_to_luma601\n");
             return -1;
         }
 
-        if (write_ppm("ggimg_luma601.ppm", nx, ny, img_luma601, 1) == false) {
-            printf("Failed to write image\n");
-            return -1;
-        }
+        write_ppm("ggimg_luma601.ppm", nx, ny, img_luma601, 1);
     }
 
     {
-        printf("[+] RGB -> luma 709\n");
+        printf("[+] ggimg::rgb_to_luma709\n");
 
         img_luma709.resize(nx*ny);
-        if (ggimg::rgb_to_luma709_2d(nx, ny, img_rgb.data(), (uint8_t) 0, (uint8_t) 255, img_luma709.data()) == false) {
-            printf("Failed to convert RGB to luma 709\n");
+        if (ggimg::rgb_to_luma709_2d(nx, ny, img_rgb.data(), img_luma709.data()) == false) {
+            printf("Failed ggimg::rgb_to_luma709\n");
             return -1;
         }
 
-        if (write_ppm("ggimg_luma709.ppm", nx, ny, img_luma709, 1) == false) {
-            printf("Failed to write image\n");
-            return -1;
-        }
+        write_ppm("ggimg_luma709.ppm", nx, ny, img_luma709, 1);
     }
 
     {
-        printf("[+] RGB -> grayscale\n");
+        printf("[+] ggimg::rgb_to_gray_2d\n");
 
         img_grayscale.resize(nx*ny);
-        if (ggimg::rgb_to_gray_2d(nx, ny, img_rgb.data(), (uint8_t) 0, (uint8_t) 255, img_grayscale.data()) == false) {
-            printf("Failed to convert RGB to grayscale\n");
+        if (ggimg::rgb_to_gray_2d(nx, ny, img_rgb.data(), img_grayscale.data()) == false) {
+            printf("Failed ggimg::rgb_to_gray_2d\n");
             return -1;
         }
 
-        if (write_ppm("ggimg_grayscale.ppm", nx, ny, img_grayscale, 1) == false) {
-            printf("Failed to write image\n");
-            return -1;
-        }
+        write_ppm("ggimg_grayscale.ppm", nx, ny, img_grayscale, 1);
     }
 
     {
-        printf("[+] grayscale -> RGB\n");
+        printf("[+] ggimg::gray_to_rgb_2d\n");
 
         img_tmp.resize(3*nx*ny);
-        if (ggimg::gray_to_rgb_2d(nx, ny, img_grayscale.data(), (uint8_t) 0, (uint8_t) 255, img_tmp.data()) == false) {
-            printf("Failed to convert grayscale to RGB\n");
+        if (ggimg::gray_to_rgb_2d(nx, ny, img_grayscale.data(), img_tmp.data()) == false) {
+            printf("Failed ggimg::gray_to_rgb_2d\n");
             return -1;
         }
 
-        if (write_ppm("ggimg_rgb.ppm", nx, ny, img_tmp, 3) == false) {
-            printf("Failed to write image\n");
-            return -1;
-        }
+        write_ppm("ggimg_rgb.ppm", nx, ny, img_tmp, 3);
     }
 
     {
-        printf("[+] Normalize\n");
+        printf("[+] ggimg::normalize_2d\n");
 
         img_normalize.resize(nx*ny);
         if (ggimg::normalize_2d(nx, ny, img_grayscale.data(), (uint8_t) 100, (uint8_t) 200, img_normalize.data()) == false) {
-            printf("Failed to normalize image\n");
+            printf("Failed ggimg::normalize_2d\n");
             return -1;
         }
 
-        if (write_ppm("ggimg_normalized.ppm", nx, ny, img_normalize, 1) == false) {
-            printf("Failed to write image\n");
-            return -1;
-        }
+        write_ppm("ggimg_normalize.ppm", nx, ny, img_normalize, 1);
     }
 
     {
-        printf("[+] Normalize histogram\n");
+        printf("[+] ggimg::normalize_hist_2d\n");
 
         img_normalize_hist.resize(nx*ny);
         if (ggimg::normalize_hist_2d(nx, ny, img_grayscale.data(), img_normalize_hist.data(), (uint8_t) 255) == false) {
-            printf("Failed to normalize_hist image\n");
+            printf("Failed ggimg::normalize_hist_2d\n");
             return -1;
         }
 
-        if (write_ppm("ggimg_normalized_hist.ppm", nx, ny, img_normalize_hist, 1) == false) {
-            printf("Failed to write image\n");
-            return -1;
-        }
+        write_ppm("ggimg_normalize_hist.ppm", nx, ny, img_normalize_hist, 1);
     }
 
     {
-        printf("[+] Gradient X\n");
+        printf("[+] ggimg::gradient_sobel_2d(mode = 1)\n");
 
         img_gradient_x.resize(nx*ny);
         if (ggimg::gradient_sobel_2d(1, nx, ny, img_grayscale.data(), (uint8_t) 255, img_gradient_x.data()) == false) {
-            printf("Failed to calculate X gradient image\n");
+            printf("Failed ggimg::gradient_sobel_2d\n");
             return -1;
         }
 
-        if (write_ppm("ggimg_gradient_x.ppm", nx, ny, img_gradient_x, 1) == false) {
-            printf("Failed to write image\n");
-            return -1;
-        }
+        write_ppm("ggimg_gradient_x.ppm", nx, ny, img_gradient_x, 1);
     }
 
     {
-        printf("[+] Gradient Y\n");
+        printf("[+] ggimg::gradient_sobel_2d(mode = 2)\n");
 
         img_gradient_y.resize(nx*ny);
         if (ggimg::gradient_sobel_2d(2, nx, ny, img_grayscale.data(), (uint8_t) 255, img_gradient_y.data()) == false) {
-            printf("Failed to calculate Y gradient image\n");
+            printf("Failed ggimg::gradient_sobel_2d\n");
             return -1;
         }
 
-        if (write_ppm("ggimg_gradient_y.ppm", nx, ny, img_gradient_y, 1) == false) {
-            printf("Failed to write image\n");
-            return -1;
-        }
+        write_ppm("ggimg_gradient_y.ppm", nx, ny, img_gradient_y, 1);
     }
 
     {
-        printf("[+] Gradient XY\n");
+        printf("[+] ggimg::gradient_sobel_2d(mode = 0)\n");
 
         img_gradient_xy.resize(nx*ny);
         if (ggimg::gradient_sobel_2d(0, nx, ny, img_grayscale.data(), (uint8_t) 255, img_gradient_xy.data()) == false) {
-            printf("Failed to calculate gradient XY image\n");
+            printf("Failed ggimg::gradient_sobel_2d\n");
             return -1;
         }
 
-        if (write_ppm("ggimg_gradient.ppm", nx, ny, img_gradient_xy, 1) == false) {
-            printf("Failed to write image\n");
-            return -1;
-        }
+        write_ppm("ggimg_gradient.ppm", nx, ny, img_gradient_xy, 1);
     }
 
     {
-        printf("[+] Gaussian filter\n");
+        printf("[+] ggimg::gaussian_filter_2d\n");
 
         img_gaussian_filter.resize(nx*ny);
         if (ggimg::gaussian_filter_2d(nx, ny, img_grayscale.data(), img_gaussian_filter.data(), 3.0f) == false) {
-            printf("Failed to apply gaussian filter\n");
+            printf("Failed ggimg::gaussian_filter_2d\n");
             return -1;
         }
 
-        if (write_ppm("ggimg_gaussian_filter.ppm", nx, ny, img_gaussian_filter, 1) == false) {
-            printf("Failed to write image\n");
-            return -1;
-        }
+        write_ppm("ggimg_gaussian_filter.ppm", nx, ny, img_gaussian_filter, 1);
     }
 
     {
-        printf("[+] Median filter\n");
+        printf("[+] ggimg::median_filter_2d\n");
 
         img_median_filter.resize(nx*ny);
         if (ggimg::median_filter_2d(nx, ny, img_grayscale.data(), img_median_filter.data(), 5) == false) {
-            printf("Failed to apply median filter\n");
+            printf("Failed ggimg::median_filter_2d\n");
             return -1;
         }
 
-        if (write_ppm("ggimg_median_filter.ppm", nx, ny, img_median_filter, 1) == false) {
-            printf("Failed to write image\n");
-            return -1;
-        }
+        write_ppm("ggimg_median_filter.ppm", nx, ny, img_median_filter, 1);
     }
 
     {
-        printf("[+] Scale using nearest-neighbours\n");
+        printf("[+] ggimg::scale_nn_2d\n");
 
         int snx = -1;
         int sny = -1;
         if (ggimg::scale_nn_2d(nx, ny, img_grayscale.data(), 0.33f, 0.66f, snx, sny, img_scale_nn) == false) {
-            printf("Failed to calculate scaled image using nearest-neighbours\n");
+            printf("Failed ggimg::scale_nn_2d\n");
             return -1;
         }
 
-        if (write_ppm("ggimg_scale_nn.ppm", snx, sny, img_scale_nn, 1) == false) {
-            printf("Failed to write image\n");
-            return -1;
-        }
+        write_ppm("ggimg_scale_nn.ppm", snx, sny, img_scale_nn, 1);
     }
 
     {
-        printf("[+] Scale using linear-interpolation\n");
+        printf("[+] ggimg::scale_li_2d\n");
 
         int snx = -1;
         int sny = -1;
         if (ggimg::scale_li_2d(nx, ny, img_grayscale.data(), 0.33f, 0.66f, snx, sny, img_scale_li) == false) {
-            printf("Failed to calculate scaled image using linear-interpolation\n");
+            printf("Failed ggimg::scale_li_2d\n");
             return -1;
         }
 
-        if (write_ppm("ggimg_scale_li.ppm", snx, sny, img_scale_li, 1) == false) {
-            printf("Failed to write image\n");
+        write_ppm("ggimg_scale_li.ppm", snx, sny, img_scale_li, 1);
+    }
+
+    {
+        printf("[+] ggimg::transform_homography_gray_nn\n");
+
+        img_transform_homography_gray_nn.resize(nx*ny);
+        if (ggimg::transform_homography_gray_nn(nx, ny, img_grayscale.data(), { 0.68, -0.48, 0.38, 0.87, 0.81, -0.43, -0.15, 0.12, 1.00 }, nx, ny, img_transform_homography_gray_nn.data()) == false) {
+            printf("Failed ggimg::transform_homography_gray_nn \n");
             return -1;
         }
+
+        write_ppm("ggimg_transform_homography_gray_nn.ppm", nx, ny, img_transform_homography_gray_nn, 1);
+    }
+
+    {
+        printf("[+] ggimg::transform_homography_rgb_nn\n");
+
+        img_transform_homography_rgb_nn.resize(3*nx*ny);
+        if (ggimg::transform_homography_rgb_nn(nx, ny, img_rgb.data(), { 0.68, -0.48, 0.38, 0.87, 0.81, -0.43, -0.15, 0.12, 1.00 }, nx, ny, img_transform_homography_rgb_nn.data()) == false) {
+            printf("Failed ggimg::transform_homography_rgb_nn \n");
+            return -1;
+        }
+
+        write_ppm("ggimg_transform_homography_rgb_nn.ppm", nx, ny, img_transform_homography_rgb_nn, 3);
     }
 
     printf("All done\n");

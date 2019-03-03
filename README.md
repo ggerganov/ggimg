@@ -60,3 +60,7 @@ Below are some of the available operations. Check the header file for the comple
 
 <a href="https://i.imgur.com/99qGoZ5.png" target="_blank">![scale_li_2d](https://i.imgur.com/99qGoZ5.png)</a>
 
+* ggimg::transform_homography_rgb_nn()
+
+<a href="https://i.imgur.com/99jONF6.png" target="_blank">![scale_li_2d](https://i.imgur.com/99jONF6.png)</a>
+
