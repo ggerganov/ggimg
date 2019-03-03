@@ -30,6 +30,16 @@ namespace ggimg {
     template <typename TSrc, typename TDst> bool rgb_to_luma709_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
     template <typename TSrc, typename TDst> bool rgb_to_gray_2d(int nx, int ny, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
     template <typename TSrc, typename TDst> bool rgb_to_gray_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
+    template <typename TSrc, typename TDst> bool rgb_to_c_2d(int nx, int ny, int c, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
+    template <typename TSrc, typename TDst> bool rgb_to_c_3d(int nx, int ny, int nz, int c, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
+    template <typename TSrc, typename TDst> bool rgb_to_r_2d(int nx, int ny, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
+    template <typename TSrc, typename TDst> bool rgb_to_r_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
+    template <typename TSrc, typename TDst> bool rgb_to_g_2d(int nx, int ny, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
+    template <typename TSrc, typename TDst> bool rgb_to_g_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
+    template <typename TSrc, typename TDst> bool rgb_to_b_2d(int nx, int ny, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
+    template <typename TSrc, typename TDst> bool rgb_to_b_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
+    template <typename TSrc, typename TDst> bool gray_to_rgb_2d(int nx, int ny, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
+    template <typename TSrc, typename TDst> bool gray_to_rgb_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
 
     template <typename TSrc, typename TDst> bool normalize_2d(int nx, int ny, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
     template <typename TSrc, typename TDst> bool normalize_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
@@ -157,6 +167,101 @@ namespace ggimg {
     template <typename TSrc, typename TDst>
         bool rgb_to_gray_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
             return rgb_to_luma709_3d(nx, ny, nz, src, dmin, dmax, dst);
+        }
+
+    template <typename TSrc, typename TDst>
+        bool rgb_to_c_2d(int nx, int ny, int c, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
+            return rgb_to_c_2d(nx, ny, 1, c, src, dmin, dmax, dst);
+        }
+
+    template <typename TSrc, typename TDst>
+        bool rgb_to_c_3d(int nx, int ny, int nz, int c, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
+            if (nx < 1) return false;
+            if (ny < 1) return false;
+            if (nz < 1) return false;
+            if (src == nullptr || dst == nullptr) return false;
+            if (dmax < dmin) return false;
+
+            int n = nx*ny*nz;
+
+            auto imin = src[c];
+            auto imax = imin;
+            for (int i = 1; i < n; ++i) {
+                auto icur = src[3*i + c];
+                if (icur > imax) imax = icur;
+                if (icur < imin) imin = icur;
+            }
+
+            float scale = (imax > imin) ? ((float)(dmax - dmin))/(imax - imin) : 1;
+            for (int i = 0; i < n; ++i) {
+                dst[i] = dmin + ((float)(src[3*i + c] - imin))*scale;
+            }
+
+            return true;
+        }
+
+    template <typename TSrc, typename TDst>
+        bool rgb_to_r_2d(int nx, int ny, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
+            return rgb_to_c_2d(nx, ny, 0, src, dmin, dmax, dst);
+        }
+
+    template <typename TSrc, typename TDst>
+        bool rgb_to_r_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
+            return rgb_to_c_3d(nx, ny, nz, 0, src, dmin, dmax, dst);
+        }
+
+    template <typename TSrc, typename TDst>
+        bool rgb_to_g_2d(int nx, int ny, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
+            return rgb_to_c_2d(nx, ny, 1, src, dmin, dmax, dst);
+        }
+
+    template <typename TSrc, typename TDst>
+        bool rgb_to_g_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
+            return rgb_to_c_3d(nx, ny, nz, 1, src, dmin, dmax, dst);
+        }
+
+    template <typename TSrc, typename TDst>
+        bool rgb_to_b_2d(int nx, int ny, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
+            return rgb_to_c_2d(nx, ny, 2, src, dmin, dmax, dst);
+        }
+
+    template <typename TSrc, typename TDst>
+        bool rgb_to_b_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
+            return rgb_to_c_3d(nx, ny, nz, 2, src, dmin, dmax, dst);
+        }
+
+    template <typename TSrc, typename TDst>
+        bool gray_to_rgb_2d(int nx, int ny, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
+            return gray_to_rgb_3d(nx, ny, 1, src, dmin, dmax, dst);
+        }
+
+    template <typename TSrc, typename TDst>
+        bool gray_to_rgb_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst) {
+            if (nx < 1) return false;
+            if (ny < 1) return false;
+            if (nz < 1) return false;
+            if (src == nullptr || dst == nullptr) return false;
+            if (dmax < dmin) return false;
+
+            int n = nx*ny*nz;
+
+            auto imin = src[0];
+            auto imax = imin;
+            for (int i = 1; i < n; ++i) {
+                auto icur = src[i];
+                if (icur > imax) imax = icur;
+                if (icur < imin) imin = icur;
+            }
+
+            float scale = (imax > imin) ? ((float)(dmax - dmin))/(imax - imin) : 1;
+            for (int i = 0; i < n; ++i) {
+                float v = dmin + ((float)(src[i] - imin))*scale;
+                dst[3*i + 0] = v;
+                dst[3*i + 1] = v;
+                dst[3*i + 2] = v;
+            }
+
+            return true;
         }
 
     /*! \brief Simple intensity scale.

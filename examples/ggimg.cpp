@@ -35,6 +35,7 @@ bool read_ppm(const char * fname, int & nx, int & ny, std::vector<uint8_t> & img
     if (fin.eof()) return false;
 
     img.resize(3*nx*ny);
+    fin.read((char *)(img.data()), 1);
     fin.read((char *)(img.data()), 3*nx*ny);
 
     if (fin.eof()) return false;
@@ -48,9 +49,7 @@ bool write_ppm(const char * fname, int nx, int ny, const std::vector<uint8_t> & 
     if (bpp == 1) fout << "P5\n";
     if (bpp == 3) fout << "P6\n";
 
-    fout << nx << " " << ny << "\n255";
-
-    if (bpp == 1) fout << "\n";
+    fout << nx << " " << ny << "\n255\n";
 
     if (bpp == 1) fout.write((char *)(img.data()), nx*ny);
     if (bpp == 3) fout.write((char *)(img.data()), 3*nx*ny);
@@ -73,6 +72,7 @@ int main(int argc, char ** argv) {
 
     using Image2D = std::vector<uint8_t>;
 
+    Image2D img_tmp;
     Image2D img_rgb;
     Image2D img_luma601;
     Image2D img_luma709;
@@ -136,11 +136,26 @@ int main(int argc, char ** argv) {
 
         img_grayscale.resize(nx*ny);
         if (ggimg::rgb_to_gray_2d(nx, ny, img_rgb.data(), (uint8_t) 0, (uint8_t) 255, img_grayscale.data()) == false) {
-            printf("Failed to convert RGB to luma 709\n");
+            printf("Failed to convert RGB to grayscale\n");
             return -1;
         }
 
         if (write_ppm("ggimg_grayscale.ppm", nx, ny, img_grayscale, 1) == false) {
+            printf("Failed to write image\n");
+            return -1;
+        }
+    }
+
+    {
+        printf("[+] grayscale -> RGB\n");
+
+        img_tmp.resize(3*nx*ny);
+        if (ggimg::gray_to_rgb_2d(nx, ny, img_grayscale.data(), (uint8_t) 0, (uint8_t) 255, img_tmp.data()) == false) {
+            printf("Failed to convert grayscale to RGB\n");
+            return -1;
+        }
+
+        if (write_ppm("ggimg_rgb.ppm", nx, ny, img_tmp, 3) == false) {
             printf("Failed to write image\n");
             return -1;
         }
