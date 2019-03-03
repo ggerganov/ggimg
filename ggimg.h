@@ -1147,7 +1147,6 @@ namespace ggimg {
             if (2*k >= nx) return false;
             if (2*k >= ny) return false;
 
-            int nmed = (2*k + 1)*(2*k + 1)/2;
             int wsize = 256*nx;
 
             bool wdelete = false;
@@ -1185,7 +1184,7 @@ namespace ggimg {
 
                 for (int x = 0; x < k; ++x) {
                     int ncur = 0;
-                    for (j = 0; j < 255 && ncur < nmed; ++j) {
+                    for (j = 0; j < 255 && ncur < nker/2; ++j) {
                         ncur += hker[j];
                     }
                     dst[y*nx + x] = j;
@@ -1198,7 +1197,7 @@ namespace ggimg {
 
                 for (int x = k; x < nx - k - 1; ++x) {
                     int ncur = 0;
-                    for (j = 0; j < 255 && ncur < nmed; ++j) {
+                    for (j = 0; j < 255 && ncur < nker/2; ++j) {
                         ncur += hker[j];
                     }
                     dst[y*nx + x] = j;
@@ -1218,7 +1217,7 @@ namespace ggimg {
 
                 for (int x = nx - k - 1; x < nx; ++x) {
                     int ncur = 0;
-                    for (j = 0; j < 255 && ncur < nmed; ++j) {
+                    for (j = 0; j < 255 && ncur < nker/2; ++j) {
                         ncur += hker[j];
                     }
                     dst[y*nx + x] = j;
@@ -1248,7 +1247,7 @@ namespace ggimg {
 
                 for (int x = 0; x < k; ++x) {
                     int ncur = 0;
-                    for (j = 0; j < 255 && ncur < nmed; ++j) {
+                    for (j = 0; j < 255 && ncur < nker/2; ++j) {
                         ncur += hker[j];
                     }
                     dst[y*nx + x] = j;
@@ -1261,7 +1260,7 @@ namespace ggimg {
 
                 for (int x = k; x < nx - k - 1; ++x) {
                     int ncur = 0;
-                    for (j = 0; j < 255 && ncur < nmed; ++j) {
+                    for (j = 0; j < 255 && ncur < nker/2; ++j) {
                         ncur += hker[j];
                     }
                     dst[y*nx + x] = j;
@@ -1282,7 +1281,7 @@ namespace ggimg {
 
                 for (int x = nx - k - 1; x < nx; ++x) {
                     int ncur = 0;
-                    for (j = 0; j < 255 && ncur < nmed; ++j) {
+                    for (j = 0; j < 255 && ncur < nker/2; ++j) {
                         ncur += hker[j];
                     }
                     dst[y*nx + x] = j;
@@ -1314,7 +1313,7 @@ namespace ggimg {
 
                 for (int x = 0; x < k; ++x) {
                     int ncur = 0;
-                    for (j = 0; j < 255 && ncur < nmed; ++j) {
+                    for (j = 0; j < 255 && ncur < nker/2; ++j) {
                         ncur += hker[j];
                     }
                     dst[y*nx + x] = j;
@@ -1327,7 +1326,7 @@ namespace ggimg {
 
                 for (int x = k; x < nx - k - 1; ++x) {
                     int ncur = 0;
-                    for (j = 0; j < 255 && ncur < nmed; ++j) {
+                    for (j = 0; j < 255 && ncur < nker/2; ++j) {
                         ncur += hker[j];
                     }
                     dst[y*nx + x] = j;
@@ -1347,7 +1346,7 @@ namespace ggimg {
 
                 for (int x = nx - k - 1; x < nx; ++x) {
                     int ncur = 0;
-                    for (j = 0; j < 255 && ncur < nmed; ++j) {
+                    for (j = 0; j < 255 && ncur < nker/2; ++j) {
                         ncur += hker[j];
                     }
                     dst[y*nx + x] = j;

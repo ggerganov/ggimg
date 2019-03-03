@@ -50,7 +50,7 @@ Below are some of the available operations. Check the header file for the comple
 
 * ggimg::median_filter_2d(k = 5)
 
-<a href="https://i.imgur.com/grOIGIY.png" target="_blank">![scale_nn_2d](https://i.imgur.com/grOIGIY.png)</a>
+<a href="https://i.imgur.com/JxftfXY.png" target="_blank">![median_filter_2d](https://i.imgur.com/JxftfXY.png)</a>
 
 * ggimg::scale_nn_2d(sx = 0.33f, sy = 0.66f)
 
@@ -58,5 +58,5 @@ Below are some of the available operations. Check the header file for the comple
 
 * ggimg::scale_li_2d(sx = 0.33f, sy = 0.66f)
 
-<a href="https://i.imgur.com/99qGoZ5.png" target="_blank">![scale_nn_2d](https://i.imgur.com/99qGoZ5.png)</a>
+<a href="https://i.imgur.com/99qGoZ5.png" target="_blank">![scale_li_2d](https://i.imgur.com/99qGoZ5.png)</a>
 
