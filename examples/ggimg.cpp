@@ -76,11 +76,13 @@ int main(int argc, char ** argv) {
     Image2D img_rgb;
     Image2D img_luma601;
     Image2D img_luma709;
-    Image2D img_grayscale;
+    Image2D img_gray;
     Image2D img_normalize;
     Image2D img_normalize_hist;
     Image2D img_gaussian_filter;
+    Image2D img_gaussian_filter_rgb;
     Image2D img_median_filter;
+    Image2D img_median_filter_rgb;
     Image2D img_gradient_x;
     Image2D img_gradient_y;
     Image2D img_gradient_xy;
@@ -130,20 +132,20 @@ int main(int argc, char ** argv) {
     {
         printf("[+] ggimg::rgb_to_gray_2d\n");
 
-        img_grayscale.resize(nx*ny);
-        if (ggimg::rgb_to_gray_2d(nx, ny, img_rgb.data(), img_grayscale.data()) == false) {
+        img_gray.resize(nx*ny);
+        if (ggimg::rgb_to_gray_2d(nx, ny, img_rgb.data(), img_gray.data()) == false) {
             printf("Failed ggimg::rgb_to_gray_2d\n");
             return -1;
         }
 
-        write_ppm("ggimg_grayscale.ppm", nx, ny, img_grayscale, 1);
+        write_ppm("ggimg_gray.ppm", nx, ny, img_gray, 1);
     }
 
     {
         printf("[+] ggimg::gray_to_rgb_2d\n");
 
         img_tmp.resize(3*nx*ny);
-        if (ggimg::gray_to_rgb_2d(nx, ny, img_grayscale.data(), img_tmp.data()) == false) {
+        if (ggimg::gray_to_rgb_2d(nx, ny, img_gray.data(), img_tmp.data()) == false) {
             printf("Failed ggimg::gray_to_rgb_2d\n");
             return -1;
         }
@@ -155,7 +157,7 @@ int main(int argc, char ** argv) {
         printf("[+] ggimg::normalize_2d\n");
 
         img_normalize.resize(nx*ny);
-        if (ggimg::normalize_2d(nx, ny, img_grayscale.data(), (uint8_t) 100, (uint8_t) 200, img_normalize.data()) == false) {
+        if (ggimg::normalize_2d(nx, ny, img_gray.data(), (uint8_t) 100, (uint8_t) 200, img_normalize.data()) == false) {
             printf("Failed ggimg::normalize_2d\n");
             return -1;
         }
@@ -167,7 +169,7 @@ int main(int argc, char ** argv) {
         printf("[+] ggimg::normalize_hist_2d\n");
 
         img_normalize_hist.resize(nx*ny);
-        if (ggimg::normalize_hist_2d(nx, ny, img_grayscale.data(), img_normalize_hist.data(), (uint8_t) 255) == false) {
+        if (ggimg::normalize_hist_2d(nx, ny, img_gray.data(), img_normalize_hist.data(), (uint8_t) 255) == false) {
             printf("Failed ggimg::normalize_hist_2d\n");
             return -1;
         }
@@ -179,7 +181,7 @@ int main(int argc, char ** argv) {
         printf("[+] ggimg::gradient_sobel_2d(mode = 1)\n");
 
         img_gradient_x.resize(nx*ny);
-        if (ggimg::gradient_sobel_2d(1, nx, ny, img_grayscale.data(), (uint8_t) 255, img_gradient_x.data()) == false) {
+        if (ggimg::gradient_sobel_2d(1, nx, ny, img_gray.data(), (uint8_t) 255, img_gradient_x.data()) == false) {
             printf("Failed ggimg::gradient_sobel_2d\n");
             return -1;
         }
@@ -191,7 +193,7 @@ int main(int argc, char ** argv) {
         printf("[+] ggimg::gradient_sobel_2d(mode = 2)\n");
 
         img_gradient_y.resize(nx*ny);
-        if (ggimg::gradient_sobel_2d(2, nx, ny, img_grayscale.data(), (uint8_t) 255, img_gradient_y.data()) == false) {
+        if (ggimg::gradient_sobel_2d(2, nx, ny, img_gray.data(), (uint8_t) 255, img_gradient_y.data()) == false) {
             printf("Failed ggimg::gradient_sobel_2d\n");
             return -1;
         }
@@ -203,7 +205,7 @@ int main(int argc, char ** argv) {
         printf("[+] ggimg::gradient_sobel_2d(mode = 0)\n");
 
         img_gradient_xy.resize(nx*ny);
-        if (ggimg::gradient_sobel_2d(0, nx, ny, img_grayscale.data(), (uint8_t) 255, img_gradient_xy.data()) == false) {
+        if (ggimg::gradient_sobel_2d(0, nx, ny, img_gray.data(), (uint8_t) 255, img_gradient_xy.data()) == false) {
             printf("Failed ggimg::gradient_sobel_2d\n");
             return -1;
         }
@@ -215,7 +217,7 @@ int main(int argc, char ** argv) {
         printf("[+] ggimg::gaussian_filter_2d\n");
 
         img_gaussian_filter.resize(nx*ny);
-        if (ggimg::gaussian_filter_2d(nx, ny, img_grayscale.data(), img_gaussian_filter.data(), 3.0f) == false) {
+        if (ggimg::gaussian_filter_2d(nx, ny, img_gray.data(), img_gaussian_filter.data(), 3.0f) == false) {
             printf("Failed ggimg::gaussian_filter_2d\n");
             return -1;
         }
@@ -224,10 +226,22 @@ int main(int argc, char ** argv) {
     }
 
     {
+        printf("[+] ggimg::gaussian_filter_rgb_2d\n");
+
+        img_gaussian_filter_rgb.resize(3*nx*ny);
+        if (ggimg::gaussian_filter_rgb_2d(nx, ny, img_rgb.data(), img_gaussian_filter_rgb.data(), 3.0f) == false) {
+            printf("Failed ggimg::gaussian_filter_rgb_2d\n");
+            return -1;
+        }
+
+        write_ppm("ggimg_gaussian_filter_rgb.ppm", nx, ny, img_gaussian_filter_rgb, 3);
+    }
+
+    {
         printf("[+] ggimg::median_filter_2d\n");
 
         img_median_filter.resize(nx*ny);
-        if (ggimg::median_filter_2d(nx, ny, img_grayscale.data(), img_median_filter.data(), 5) == false) {
+        if (ggimg::median_filter_2d(nx, ny, img_gray.data(), img_median_filter.data(), 5) == false) {
             printf("Failed ggimg::median_filter_2d\n");
             return -1;
         }
@@ -236,11 +250,23 @@ int main(int argc, char ** argv) {
     }
 
     {
+        printf("[+] ggimg::median_filter_rgb_2d\n");
+
+        img_median_filter_rgb.resize(3*nx*ny);
+        if (ggimg::median_filter_rgb_2d(nx, ny, img_rgb.data(), img_median_filter_rgb.data(), 5) == false) {
+            printf("Failed ggimg::median_filter_rgb_2d\n");
+            return -1;
+        }
+
+        write_ppm("ggimg_median_filter_rgb.ppm", nx, ny, img_median_filter_rgb, 3);
+    }
+
+    {
         printf("[+] ggimg::scale_nn_2d\n");
 
         int snx = -1;
         int sny = -1;
-        if (ggimg::scale_nn_2d(nx, ny, img_grayscale.data(), 0.33f, 0.66f, snx, sny, img_scale_nn) == false) {
+        if (ggimg::scale_nn_2d(nx, ny, img_gray.data(), 0.33f, 0.66f, snx, sny, img_scale_nn) == false) {
             printf("Failed ggimg::scale_nn_2d\n");
             return -1;
         }
@@ -253,7 +279,7 @@ int main(int argc, char ** argv) {
 
         int snx = -1;
         int sny = -1;
-        if (ggimg::scale_li_2d(nx, ny, img_grayscale.data(), 0.33f, 0.66f, snx, sny, img_scale_li) == false) {
+        if (ggimg::scale_li_2d(nx, ny, img_gray.data(), 0.33f, 0.66f, snx, sny, img_scale_li) == false) {
             printf("Failed ggimg::scale_li_2d\n");
             return -1;
         }
@@ -265,7 +291,7 @@ int main(int argc, char ** argv) {
         printf("[+] ggimg::transform_homography_gray_nn\n");
 
         img_transform_homography_gray_nn.resize(nx*ny);
-        if (ggimg::transform_homography_gray_nn(nx, ny, img_grayscale.data(), { 0.68, -0.48, 0.38, 0.87, 0.81, -0.43, -0.15, 0.12, 1.00 }, nx, ny, img_transform_homography_gray_nn.data()) == false) {
+        if (ggimg::transform_homography_gray_nn(nx, ny, img_gray.data(), { 0.68, -0.48, 0.38, 0.87, 0.81, -0.43, -0.15, 0.12, 1.00 }, nx, ny, img_transform_homography_gray_nn.data()) == false) {
             printf("Failed ggimg::transform_homography_gray_nn \n");
             return -1;
         }

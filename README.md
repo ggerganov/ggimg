@@ -48,9 +48,17 @@ Below are some of the available operations. Check the header file for the comple
 
 <a href="https://i.imgur.com/GofjQqU.png" target="_blank">![gaussian_filter_2d](https://i.imgur.com/GofjQqU.png)</a>
 
+* ggimg::gaussian_filter_rgb_2d(sigma = 3.0f)
+
+<a href="https://i.imgur.com/PkFcTtf.png" target="_blank">![gaussian_filter_2d](https://i.imgur.com/PkFcTtf.png)</a>
+
 * ggimg::median_filter_2d(k = 5)
 
 <a href="https://i.imgur.com/JxftfXY.png" target="_blank">![median_filter_2d](https://i.imgur.com/JxftfXY.png)</a>
+
+* ggimg::median_filter_rgb_2d(k = 5)
+
+<a href="https://i.imgur.com/2E3YVA7.png" target="_blank">![median_filter_2d](https://i.imgur.com/2E3YVA7.png)</a>
 
 * ggimg::scale_nn_2d(sx = 0.33f, sy = 0.66f)
 
