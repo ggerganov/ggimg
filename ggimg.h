@@ -13,6 +13,27 @@
 
 namespace ggimg {
 
+    template <typename T>
+        struct buffer {
+            std::size_t need = 0;
+
+            std::vector<T> data;
+
+            inline bool init() {
+                if (data.size() < need) {
+                    data.resize(need);
+                }
+
+                return true;
+            }
+
+            inline bool zero() {
+                std::fill(data.begin(), data.end(), 0);
+
+                return true;
+            }
+        };
+
     //
     // Single-threaded operations
     //
@@ -58,28 +79,30 @@ namespace ggimg {
     template <typename TSrc, typename TDst> bool normalize_robust_2d(int nx, int ny, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
     template <typename TSrc, typename TDst> bool normalize_robust_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
 
-    template <typename T> bool normalize_hist_2d(int nx, int ny, const T * src, T * dst, T dmax, int nw = 0, int * work = nullptr, bool wzero = true);
-    template <typename T> bool normalize_hist_3d(int nx, int ny, int nz, const T * src, T * dst, T dmax, int nw = 0, int * work = nullptr, bool wzero = true);
+    template <typename T> bool normalize_hist_2d(int nx, int ny, const T * src, T * dst, T dmax, buffer<int> && worki = {});
+    template <typename T> bool normalize_hist_3d(int nx, int ny, int nz, const T * src, T * dst, T dmax, buffer<int> && worki = {});
 
     template <typename T> bool gradient_sobel_2d(bool doX, bool doY, int nx, int ny, const T * src, float * dst);
-    template <typename TSrc, typename TDst> bool gradient_sobel_2d(int mode, int nx, int ny, const TSrc * src, TDst dmax, TDst * dst, int nw = 0, float * work = nullptr);
+    template <typename TSrc, typename TDst> bool gradient_sobel_2d(int mode, int nx, int ny, const TSrc * src, TDst dmax, TDst * dst, buffer<float> && workf = {});
 
     template <typename T> bool gradient_sobel_3d(bool doX, bool doY, bool doZ, int nx, int ny, int nz, const T * src, float * dst);
-    template <typename TSrc, typename TDst> bool gradient_sobel_3d(int mode, int nx, int ny, int nz, const TSrc * src, TDst dmax, TDst * dst, int nw = 0, float * work = nullptr);
+    template <typename TSrc, typename TDst> bool gradient_sobel_3d(int mode, int nx, int ny, int nz, const TSrc * src, TDst dmax, TDst * dst, buffer<float> && workf = {});
 
-    template <typename T> bool convolve_2d(int nx, int ny, const T * src, T * dst, int nk, const float * k, int nw = 0, T * work = nullptr, bool wzero = true);
+    template <typename T> bool convolve_2d(int nx, int ny, const T * src, T * dst, int nk, const float * k, buffer<T> && workt = {});
 
-    template <typename T> bool gaussian_filter_2d(int nx, int ny, const T * src, T * dst, float sigma, int nw = 0, T * work = nullptr, bool wzero = true);
-    template <typename T> bool gaussian_filter_2d_gray(int nx, int ny, const T * src, T * dst, float sigma, int nw = 0, T * work = nullptr, bool wzero = true);
-    template <typename T> bool gaussian_filter_2d_rgb(int nx, int ny, const T * src, T * dst, float sigma, int nw = 0, T * work = nullptr, bool wzero = true);
+    template <typename T> bool gaussian_filter_2d(int nx, int ny, const T * src, T * dst, float sigma, buffer<T> && workt = {});
+    template <typename T> bool gaussian_filter_2d_gray(int nx, int ny, const T * src, T * dst, float sigma, buffer<T> && workt = {});
+    template <typename T> bool gaussian_filter_2d_rgb(int nx, int ny, const T * src, T * dst, float sigma, buffer<T> && workt0 = {}, buffer<T> && workt1 = {});
 
-    template <typename T> bool median_filter_2d(int nx, int ny, const T * src, T * dst, int k, int nw = 0, int * work = nullptr, bool wzero = true);
-    template <typename T> bool median_filter_2d_gray(int nx, int ny, const T * src, T * dst, int k, int nw = 0, int * work = nullptr, bool wzero = true);
-    template <typename T> bool median_filter_2d_rgb(int nx, int ny, const T * src, T * dst, int k, int nw = 0, int * work = nullptr, bool wzero = true);
+    template <typename T> bool median_filter_2d(int nx, int ny, const T * src, T * dst, int k, buffer<int> && worki = {});
+    template <typename T> bool median_filter_2d_gray(int nx, int ny, const T * src, T * dst, int k, buffer<int> && worki = {});
+    template <typename T> bool median_filter_2d_rgb(int nx, int ny, const T * src, T * dst, int k, buffer<T> && workb = {}, buffer<int> && worki = {});
+
+    template <typename T> bool lhist_filter_2d(int nx, int ny, const T * src, T * dst, int l, int k, buffer<int> && worki = {});
 
     template <typename T> bool scale_nn_2d(int snx, int sny, const T * src, float sx, float sy, int & dnx, int & dny, std::vector<T> & dst);
     template <typename T> bool scale_nn_2d_gray(int snx, int sny, const T * src, float sx, float sy, int & dnx, int & dny, std::vector<T> & dst);
-    template <typename T> bool scale_nn_2d_rgb(int snx, int sny, const T * src, float sx, float sy, int & dnx, int & dny, std::vector<T> & dst);
+    template <typename T> bool scale_nn_2d_rgb(int snx, int sny, const T * src, float sx, float sy, int & dnx, int & dny, std::vector<T> & dst, buffer<T> && workt0 = {}, buffer<T> && workt1 = {});
 
     template <typename T> bool scale_nn_isotropic_2d(int snx, int sny, const T * src, float s, int & dnx, int & dny, std::vector<T> & dst);
     template <typename T> bool scale_nn_isotropic_2d_gray(int snx, int sny, const T * src, float s, int & dnx, int & dny, std::vector<T> & dst);
@@ -90,8 +113,16 @@ namespace ggimg {
     template <typename T> bool scale_nn_maxside_2d_rgb(int snx, int sny, const T * src, int maxn, int & dnx, int & dny, std::vector<T> & dst);
 
     template <typename T> bool scale_li_2d(int snx, int sny, const T * src, float sx, float sy, int & dnx, int & dny, std::vector<T> & dst);
+    template <typename T> bool scale_li_2d_gray(int snx, int sny, const T * src, float sx, float sy, int & dnx, int & dny, std::vector<T> & dst);
+    template <typename T> bool scale_li_2d_rgb(int snx, int sny, const T * src, float sx, float sy, int & dnx, int & dny, std::vector<T> & dst, buffer<T> && workt0 = {}, buffer<T> && workt1 = {});
+
     template <typename T> bool scale_li_isotropic_2d(int snx, int sny, const T * src, float s, int & dnx, int & dny, std::vector<T> & dst);
+    template <typename T> bool scale_li_isotropic_2d_gray(int snx, int sny, const T * src, float s, int & dnx, int & dny, std::vector<T> & dst);
+    template <typename T> bool scale_li_isotropic_2d_rgb(int snx, int sny, const T * src, float s, int & dnx, int & dny, std::vector<T> & dst, buffer<T> && workt0 = {}, buffer<T> && workt1 = {});
+
     template <typename T> bool scale_li_maxside_2d(int snx, int sny, const T * src, int maxn, int & dnx, int & dny, std::vector<T> & dst);
+    template <typename T> bool scale_li_maxside_2d_gray(int snx, int sny, const T * src, int maxn, int & dnx, int & dny, std::vector<T> & dst);
+    template <typename T> bool scale_li_maxside_2d_rgb(int snx, int sny, const T * src, int maxn, int & dnx, int & dny, std::vector<T> & dst, buffer<T> && workt0 = {}, buffer<T> && workt1 = {});
 
     template <typename T> bool transform_homography_nn(int snx, int sny, const T * src, std::array<float, 9> h, int dnx, int dny, T * dst);
     template <typename T> bool transform_homography_nn_gray(int snx, int sny, const T * src, std::array<float, 9> h, int dnx, int dny, T * dst);
@@ -101,9 +132,9 @@ namespace ggimg {
     // Multi-threaded operations (to enable, define GGIMG_MT before including this header)
     //
 
-    template <typename T> bool convolve_3d(int nx, int ny, int nz, const T * src, T * dst, int nk, const float * k, int nthreads = 1, int nw = 0, T * work = nullptr, bool wzero = true);
-    template <typename T> bool gaussian_filter_3d(int nx, int ny, int nz, const T * src, T * dst, float sigma, int nthreads = 1, int nw = 0, T * work = nullptr, bool wzero = true);
-    template <typename T> bool median_filter_3d(int nx, int ny, int nz, const T * src, T * dst, int k, int nthreads = 1, int nw = 0, int * work = nullptr, bool wzero = true);
+    template <typename T> bool convolve_3d(int nx, int ny, int nz, const T * src, T * dst, int nk, const float * k, int nthreads = 1, buffer<T> && workt = {});
+    template <typename T> bool gaussian_filter_3d(int nx, int ny, int nz, const T * src, T * dst, float sigma, int nthreads = 1, buffer<T> && workt = {});
+    template <typename T> bool median_filter_3d(int nx, int ny, int nz, const T * src, T * dst, int k, int nthreads = 1, buffer<int> && worki = {});
 
     template <typename T> bool scale_nn_3d(int snx, int sny, int snz, const T * src, float sx, float sy, float sz, int & dnx, int & dny, int & dnz, std::vector<T> & dst, int nthreads = 1);
     template <typename T> bool scale_nn_isotropic_3d(int snx, int sny, int snz, const T * src, float s, int & dnx, int & dny, int & dnz, std::vector<T> & dst, int nthreads = 1);
@@ -418,7 +449,6 @@ namespace ggimg {
      *
      * Used to detect edges.
      * Cannot work in-place (\a src != \a dst)
-     * Optional \a work buffer must be with size \a nw >= nx*ny
      *
      * Ref: https://en.wikipedia.org/wiki/Sobel_operator
      */
@@ -479,7 +509,6 @@ namespace ggimg {
      *
      * Used to detect edges.
      * Can work in-place (\a src == \a dst)
-     * Optional \a work buffer must be with size \a nw >= nx*ny
      *
      * At the end, scales image intensities in the range [0, 255]
      *
@@ -490,44 +519,36 @@ namespace ggimg {
      * Ref: https://en.wikipedia.org/wiki/Sobel_operator
      */
     template <typename TSrc, typename TDst>
-        bool gradient_sobel_2d(int mode, int nx, int ny, const TSrc * src, TDst dmax, TDst * dst, int nw, float * work) {
+        bool gradient_sobel_2d(int mode, int nx, int ny, const TSrc * src, TDst dmax, TDst * dst, buffer<float> && workf) {
             if (nx < 3) return false;
             if (ny < 3) return false;
             if (src == nullptr || dst == nullptr) return false;
 
-            bool wdelete = false;
-            if (work) {
-                if (nw < nx*ny) return false;
-            } else {
-                wdelete = true;
-                work = new float[nx*ny];
-            }
+            workf.need = nx*ny;
+            if (workf.init() == false) return false;
 
             bool res = false;
             if (mode == 0) {
-                res = gradient_sobel_2d(true, true, nx, ny, src, work);
+                res = gradient_sobel_2d(true, true, nx, ny, src, workf.data.data());
             } else {
                 bool doX = mode & 1;
                 bool doY = mode & 2;
-                res = gradient_sobel_2d(doX, doY, nx, ny, src, work);
+                res = gradient_sobel_2d(doX, doY, nx, ny, src, workf.data.data());
             }
             if (res == false) {
-                if (wdelete) delete [] work;
                 return false;
             }
 
             if (dmax != 0) {
-                if (normalize_2d<float, TDst>(nx, ny, work, 0, dmax, dst) == false) {
-                    if (wdelete) delete [] work;
+                if (normalize_2d<float, TDst>(nx, ny, workf.data.data(), 0, dmax, dst) == false) {
                     return false;
                 }
             } else {
                 for (int i = 0; i < nx*ny; ++i) {
-                    dst[i] = work[i];
+                    dst[i] = workf.data[i];
                 }
             }
 
-            if (wdelete) delete [] work;
             return true;
         }
 
@@ -535,7 +556,6 @@ namespace ggimg {
      *
      * Used to detect edges.
      * Cannot work in-place (\a src != \a dst)
-     * Optional \a work buffer must be with size \a nw >= nx*ny*nz
      *
      * Ref: https://en.wikipedia.org/wiki/Sobel_operator
      */
@@ -660,7 +680,6 @@ namespace ggimg {
      *
      * Used to detect edges.
      * Can work in-place (\a src == \a dst)
-     * Optional \a work buffer must be with size \a nw >= nx*ny*nz
      *
      * At the end, scales image intensities in the range [0, 255]
      *
@@ -672,74 +691,62 @@ namespace ggimg {
      * Ref: https://en.wikipedia.org/wiki/Sobel_operator
      */
     template <typename TSrc, typename TDst>
-        bool gradient_sobel_3d(int mode, int nx, int ny, int nz, const TSrc * src, TDst dmax, TDst * dst, int nw, float * work) {
+        bool gradient_sobel_3d(int mode, int nx, int ny, int nz, const TSrc * src, TDst dmax, TDst * dst, buffer<float> && workf) {
             if (nx < 3) return false;
             if (ny < 3) return false;
             if (nz < 3) return false;
             if (src == nullptr || dst == nullptr) return false;
 
-            bool wdelete = false;
-            if (work) {
-                if (nw < nx*ny*nz) return false;
-            } else {
-                wdelete = true;
-                work = new float[nx*ny*nz];
-            }
+            workf.need = nx*ny*nz;
+            if (workf.init() == false) return false;
 
             bool res = false;
             if (mode == 0) {
-                res = gradient_sobel_3d(true, true, true, nx, ny, nz, src, work);
+                res = gradient_sobel_3d(true, true, true, nx, ny, nz, src, workf.data.data());
             } else {
                 bool doX = mode & 1;
                 bool doY = mode & 2;
                 bool doZ = mode & 4;
-                res = gradient_sobel_3d(doX, doY, doZ, nx, ny, nz, src, work);
+                res = gradient_sobel_3d(doX, doY, doZ, nx, ny, nz, src, workf.data.data());
             }
             if (res == false) {
-                if (wdelete) delete [] work;
                 return false;
             }
 
             if (dmax != 0) {
-                if (normalize_3d<float, TDst>(nx, ny, nz, work, 0, dmax, dst) == false) {
-                    if (wdelete) delete [] work;
+                if (normalize_3d<float, TDst>(nx, ny, nz, workf.data.data(), 0, dmax, dst) == false) {
                     return false;
                 }
             } else {
                 for (int i = 0; i < nx*ny*nz; ++i) {
-                    dst[i] = work[i];
+                    dst[i] = workf.data[i];
                 }
             }
 
-            if (wdelete) delete [] work;
             return true;
         }
 
     /*! \brief Histogram equalization
      *
      * Can work in-place (\a src == \a dst)
-     * If \a work buffer is provided, it's size \a nw must at least (imax - imin + 1), where
-     * imax and imin are the maximum and minimum intensities in the image.
      * On success, the \a dst image has intensities in the range [0, dmax]
      *
      * Ref: https://en.wikipedia.org/wiki/Histogram_equalization
      */
     template <typename T>
-        bool normalize_hist_2d(int nx, int ny, const T * src, T * dst, T dmax, int nw, int * work, bool wzero) {
-            return normalize_hist_3d(nx, ny, 1, src, dst, dmax, nw, work, wzero);
+        bool normalize_hist_2d(int nx, int ny, const T * src, T * dst, T dmax, buffer<int> && worki) {
+            return normalize_hist_3d(nx, ny, 1, src, dst, dmax, std::move(worki));
         }
 
     /*! \brief Histogram equalization
      *
      * Can work in-place (\a src == \a dst)
-     * If \a work buffer is provided, it's size \a nw must at least (imax - imin + 1), where
-     * imax and imin are the maximum and minimum intensities in the image.
      * On success, the \a dst image has intensities in the range [0, dmax]
      *
      * Ref: https://en.wikipedia.org/wiki/Histogram_equalization
      */
     template <typename T>
-        bool normalize_hist_3d(int nx, int ny, int nz, const T * src, T * dst, T dmax, int nw, int * work, bool wzero) {
+        bool normalize_hist_3d(int nx, int ny, int nz, const T * src, T * dst, T dmax, buffer<int> && worki) {
             if (nx <= 0 || ny <= 0 || nz <= 0) return false;
             if (src == nullptr || dst == nullptr) return false;
 
@@ -755,47 +762,41 @@ namespace ggimg {
 
             int nbin = imax - imin + 1;
 
-            bool wdelete = false;
-            if (work) {
-                if (nw < nbin) return false;
-            } else {
-                wdelete = true;
-                work = new int[nbin];
-                wzero = true;
-            }
-
-            if (wzero) {
-                for (int i = 0; i < nbin; ++i) work[i] = 0;
-            }
+            worki.need = nbin;
+            if (worki.init() == false) return false;
+            if (worki.zero() == false) return false;
 
             for (int i = 0; i < n; ++i) {
-                ++work[src[i] - imin];
+                ++worki.data[src[i] - imin];
             }
 
             int sum = 0;
             for (int i = 0; i < nbin; ++i) {
-                work[i] += sum;
-                sum = work[i];
+                worki.data[i] += sum;
+                sum = worki.data[i];
             }
             for (int i = 0; i < n; ++i) {
-                dst[i] = (T)((((float)(work[src[i] - imin] - work[0]))/(n - 1))*dmax);
+                dst[i] = (T)((((float)(worki.data[src[i] - imin] - worki.data[0]))/(n - 1))*dmax);
             }
-
-            if (wdelete) delete [] work;
 
             return true;
         }
 
     template <typename T>
-        bool convolve_2d(int nx, int ny, const T * src, T * dst, int nk, const float * k, int nw, T * work, bool wzero) {
+        bool convolve_2d(int nx, int ny, const T * src, T * dst, int nk, const float * k, buffer<T> && workt) {
             if (nx <= 0 || ny <= 0) return false;
             if (src == nullptr || dst == nullptr) return false;
             if (k == nullptr) return false;
             if (nk < 3) return false;
             if (nk % 2 == 0) return false;
 
-            int n = nx*ny;
-            if (n <= 1) return false;
+            int kw = nk/2;
+            int nx1 = nx + 2*kw;
+            int ny1 = ny + 2*kw;
+            int n1 = nx1*ny1;
+
+            workt.need = 2*n1;
+            if (workt.init() == false) return false;
 
             float inorm = 0.0;
             for (int i = 0; i < nk; ++i) {
@@ -804,40 +805,24 @@ namespace ggimg {
             if (std::fabs(inorm) < 1e-3) return false;
             inorm = 1.0/inorm;
 
-            int kw = nk/2;
-            int nx1 = nx + 2*kw;
-            int ny1 = ny + 2*kw;
-            int n1 = nx1*ny1;
+            T * tmp0 = workt.data.data();
+            T * tmp1 = workt.data.data() + n1;
 
-            bool wdelete = false;
-            if (work == nullptr) {
-                wdelete = true;
-                work = new T[2*n1];
-                wzero = true;
-            } else if (nw < 2*n1) {
-                return false;
+            for (int iy = 0; iy < ny1; ++iy) {
+                for (int ix = 0; ix < kw; ++ix) {
+                    tmp0[iy*nx1 + ix] = 0;
+                    tmp0[iy*nx1 + (nx1 - ix - 1)] = 0;
+                    tmp1[iy*nx1 + ix] = 0;
+                    tmp1[iy*nx1 + (nx1 - ix - 1)] = 0;
+                }
             }
 
-            T * tmp0 = work;
-            T * tmp1 = work + n1;
-
-            if (wzero) {
-                for (int iy = 0; iy < ny1; ++iy) {
-                    for (int ix = 0; ix < kw; ++ix) {
-                        tmp0[iy*nx1 + ix] = 0;
-                        tmp0[iy*nx1 + (nx1 - ix - 1)] = 0;
-                        tmp1[iy*nx1 + ix] = 0;
-                        tmp1[iy*nx1 + (nx1 - ix - 1)] = 0;
-                    }
-                }
-
-                for (int iy = 0; iy < kw; ++iy) {
-                    for (int ix = 0; ix < nx1; ++ix) {
-                        tmp0[iy*nx1 + ix] = 0;
-                        tmp0[(ny1 - iy - 1)*nx1 + ix] = 0;
-                        tmp1[iy*nx1 + ix] = 0;
-                        tmp1[(ny1 - iy - 1)*nx1 + ix] = 0;
-                    }
+            for (int iy = 0; iy < kw; ++iy) {
+                for (int ix = 0; ix < nx1; ++ix) {
+                    tmp0[iy*nx1 + ix] = 0;
+                    tmp0[(ny1 - iy - 1)*nx1 + ix] = 0;
+                    tmp1[iy*nx1 + ix] = 0;
+                    tmp1[(ny1 - iy - 1)*nx1 + ix] = 0;
                 }
             }
 
@@ -873,15 +858,11 @@ namespace ggimg {
                 }
             }
 
-            if (wdelete) {
-                delete [] work;
-            }
-
             return true;
         }
 
     template <typename T>
-        bool gaussian_filter_2d(int nx, int ny, const T * src, T * dst, float sigma, int nw, T * work, bool wzero) {
+        bool gaussian_filter_2d(int nx, int ny, const T * src, T * dst, float sigma, buffer<T> && workt) {
             if (sigma <= 0.0) {
                 for (int i = 0; i < nx*ny; ++i) dst[i] = src[i];
                 return true;
@@ -896,53 +877,40 @@ namespace ggimg {
             }
             k[nk] = 1;
 
-            return convolve_2d(nx, ny, src, dst, k.size(), k.data(), nw, work, wzero);
+            return convolve_2d(nx, ny, src, dst, k.size(), k.data(), std::move(workt));
         }
 
     template <typename T>
-        bool gaussian_filter_2d_gray(int nx, int ny, const T * src, T * dst, float sigma, int nw, T * work, bool wzero) {
-            return gaussian_filter_2d(nx, ny, src, dst, sigma, nw, work, wzero);
+        bool gaussian_filter_2d_gray(int nx, int ny, const T * src, T * dst, float sigma, buffer<T> && workt) {
+            return gaussian_filter_2d(nx, ny, src, dst, sigma, std::move(workt));
         }
 
     template <typename T>
-        bool gaussian_filter_2d_rgb(int nx, int ny, const T * src, T * dst, float sigma, int nw, T * work, bool wzero) {
+        bool gaussian_filter_2d_rgb(int nx, int ny, const T * src, T * dst, float sigma, buffer<T> && workt0, buffer<T> && workt1) {
             if (nx <= 0) return false;
             if (ny <= 0) return false;
             if (src == nullptr) return false;
             if (dst == nullptr) return false;
 
-            int wsize = 10*nx*ny;
+            workt0.need = 2*nx*ny;
+            if (workt0.init() == false) return false;
 
             bool res = true;
-            bool wdelete = false;
 
-            if (work) {
-                if (nw < wsize) return false;
-            } else {
-                wdelete = true;
-                work = new T[wsize];
-                wzero = true;
-            }
-
-            T * work0 = work;
-            T * work1 = work + nx*ny;
-            T * work2 = work + 2*nx*ny;
+            T * work0 = workt0.data.data();
+            T * work1 = workt0.data.data() + nx*ny;
 
             res &= rgb_to_r_2d(nx, ny, src, work0);
-            res &= gaussian_filter_2d_gray(nx, ny, work0, work1, sigma, 8*nx*ny, work2, wzero);
+            res &= gaussian_filter_2d_gray(nx, ny, work0, work1, sigma, std::move(workt1));
             res &= r_to_rgb_2d(nx, ny, work1, dst);
 
             res &= rgb_to_g_2d(nx, ny, src, work0);
-            res &= gaussian_filter_2d_gray(nx, ny, work0, work1, sigma, 8*nx*ny, work2, true);
+            res &= gaussian_filter_2d_gray(nx, ny, work0, work1, sigma, std::move(workt1));
             res &= g_to_rgb_2d(nx, ny, work1, dst);
 
             res &= rgb_to_b_2d(nx, ny, src, work0);
-            res &= gaussian_filter_2d_gray(nx, ny, work0, work1, sigma, 8*nx*ny, work2, true);
+            res &= gaussian_filter_2d_gray(nx, ny, work0, work1, sigma, std::move(workt1));
             res &= b_to_rgb_2d(nx, ny, work1, dst);
-
-            if (wdelete) {
-                delete [] work;
-            }
 
             return res;
         }
@@ -990,34 +958,28 @@ namespace ggimg {
         }
 
     template <typename T>
-        bool scale_nn_2d_rgb(int snx, int sny, const T * src, float sx, float sy, int & dnx, int & dny, std::vector<T> & dst) {
+        bool scale_nn_2d_rgb(int snx, int sny, const T * src, float sx, float sy, int & dnx, int & dny, std::vector<T> & dst, buffer<T> && workt0, buffer<T> && workt1) {
             if (snx <= 0) return false;
             if (sny <= 0) return false;
             if (src == nullptr) return false;
 
-            int wsize = snx*sny;
+            workt0.need = snx*sny;
+            if (workt0.init() == false) return false;
 
             bool res = true;
-            bool wdelete = false;
 
-            wdelete = true;
-            T * work0 = new T[wsize];
-            std::vector<T> work1;
+            res &= rgb_to_r_2d(snx, sny, src, workt0.data.data());
+            res &= scale_nn_2d_gray(snx, sny, workt0.data.data(), sx, sy, dnx, dny, std::move(workt1));
+            res &= r_to_rgb_2d(dnx, dny, workt1.data.data(), dst.data());
 
-            res &= rgb_to_r_2d(snx, sny, src, work0);
-            res &= scale_nn_2d_gray(snx, sny, work0, sx, sy, dnx, dny, work1);
+            res &= rgb_to_g_2d(snx, sny, src, workt0.data.data());
+            res &= scale_nn_2d_gray(snx, sny, workt0.data.data(), sx, sy, dnx, dny, std::move(workt1));
             dst.resize(3*dnx*dny);
-            res &= r_to_rgb_2d(dnx, dny, work1.data(), dst.data());
+            res &= g_to_rgb_2d(dnx, dny, workt1.data.data(), dst.data());
 
-            res &= rgb_to_g_2d(snx, sny, src, work0);
-            res &= scale_nn_2d_gray(snx, sny, work0, sx, sy, dnx, dny, work1);
-            res &= g_to_rgb_2d(dnx, dny, work1.data(), dst.data());
-
-            res &= rgb_to_b_2d(snx, sny, src, work0);
-            res &= scale_nn_2d_gray(snx, sny, work0, sx, sy, dnx, dny, work1);
-            res &= b_to_rgb_2d(dnx, dny, work1.data(), dst.data());
-
-            delete [] work0;
+            res &= rgb_to_b_2d(snx, sny, src, workt0.data.data());
+            res &= scale_nn_2d_gray(snx, sny, workt0.data.data(), sx, sy, dnx, dny, std::move(workt1));
+            res &= b_to_rgb_2d(dnx, dny, workt1.data.data(), dst.data());
 
             return res;
         }
@@ -1119,34 +1081,28 @@ namespace ggimg {
         }
 
     template <typename T>
-        bool scale_li_2d_rgb(int snx, int sny, const T * src, float sx, float sy, int & dnx, int & dny, std::vector<T> & dst) {
+        bool scale_li_2d_rgb(int snx, int sny, const T * src, float sx, float sy, int & dnx, int & dny, std::vector<T> & dst, buffer<T> && workt0, buffer<T> && workt1) {
             if (snx <= 0) return false;
             if (sny <= 0) return false;
             if (src == nullptr) return false;
 
-            int wsize = snx*sny;
+            workt0.need = snx*sny;
+            if (workt0.init() == false) return false;
 
             bool res = true;
-            bool wdelete = false;
 
-            wdelete = true;
-            T * work0 = new T[wsize];
-            std::vector<T> work1;
-
-            res &= rgb_to_r_2d(snx, sny, src, work0);
-            res &= scale_li_2d_gray(snx, sny, work0, sx, sy, dnx, dny, work1);
+            res &= rgb_to_r_2d(snx, sny, src, workt0.data.data());
+            res &= scale_li_2d_gray(snx, sny, workt0.data.data(), sx, sy, dnx, dny, workt1.data);
             dst.resize(3*dnx*dny);
-            res &= r_to_rgb_2d(dnx, dny, work1.data(), dst.data());
+            res &= r_to_rgb_2d(dnx, dny, workt1.data.data(), dst.data());
 
-            res &= rgb_to_g_2d(snx, sny, src, work0);
-            res &= scale_li_2d_gray(snx, sny, work0, sx, sy, dnx, dny, work1);
-            res &= g_to_rgb_2d(dnx, dny, work1.data(), dst.data());
+            res &= rgb_to_g_2d(snx, sny, src, workt0.data.data());
+            res &= scale_li_2d_gray(snx, sny, workt0.data.data(), sx, sy, dnx, dny, workt1.data);
+            res &= g_to_rgb_2d(dnx, dny, workt1.data.data(), dst.data());
 
-            res &= rgb_to_b_2d(snx, sny, src, work0);
-            res &= scale_li_2d_gray(snx, sny, work0, sx, sy, dnx, dny, work1);
-            res &= b_to_rgb_2d(dnx, dny, work1.data(), dst.data());
-
-            delete [] work0;
+            res &= rgb_to_b_2d(snx, sny, src, workt0.data.data());
+            res &= scale_li_2d_gray(snx, sny, workt0.data.data(), sx, sy, dnx, dny, workt1.data);
+            res &= b_to_rgb_2d(dnx, dny, workt1.data.data(), dst.data());
 
             return res;
         }
@@ -1162,8 +1118,8 @@ namespace ggimg {
         }
 
     template <typename T>
-        bool scale_li_isotropic_2d_rgb(int snx, int sny, const T * src, float s, int & dnx, int & dny, std::vector<T> & dst) {
-            return scale_li_2d_rgb(snx, sny, src, s, s, dnx, dny, dst);
+        bool scale_li_isotropic_2d_rgb(int snx, int sny, const T * src, float s, int & dnx, int & dny, std::vector<T> & dst, buffer<T> && workt0, buffer<T> && workt1) {
+            return scale_li_2d_rgb(snx, sny, src, s, s, dnx, dny, dst, std::move(workt0), std::move(workt1));
         }
 
     template <typename T>
@@ -1181,14 +1137,14 @@ namespace ggimg {
         }
 
     template <typename T>
-        bool scale_li_maxside_2d_rgb(int snx, int sny, const T * src, int maxn, int & dnx, int & dny, std::vector<T> & dst) {
+        bool scale_li_maxside_2d_rgb(int snx, int sny, const T * src, int maxn, int & dnx, int & dny, std::vector<T> & dst, buffer<T> && workt0, buffer<T> && workt1) {
             double maxsn = std::max(snx, sny);
             float s = ((double)(maxn))/maxsn;
-            return scale_li_isotropic_2d_rgb(snx, sny, src, s, dnx, dny, dst);
+            return scale_li_isotropic_2d_rgb(snx, sny, src, s, dnx, dny, dst, std::move(workt0), std::move(workt1));
         }
 
     template <>
-        inline bool median_filter_2d<uint8_t>(int nx, int ny, const uint8_t * src, uint8_t * dst, int k, int nw, int * work, bool wzero) {
+        inline bool median_filter_2d<uint8_t>(int nx, int ny, const uint8_t * src, uint8_t * dst, int k, buffer<int> && worki) {
             if (nx <= 0) return false;
             if (ny <= 0) return false;
             if (src == nullptr) return false;
@@ -1198,24 +1154,13 @@ namespace ggimg {
             if (2*k >= nx) return false;
             if (2*k >= ny) return false;
 
-            int wsize = 256*nx;
-
-            bool wdelete = false;
-            if (work) {
-                if (nw < wsize) return false;
-            } else {
-                wdelete = true;
-                work = new int[wsize];
-                wzero = true;
-            }
-
-            if (wzero) {
-                for (int i = 0; i < wsize; ++i) work[i] = 0;
-            }
+            worki.need = 256*nx;
+            if (worki.init() == false) return false;
+            if (worki.zero() == false) return false;
 
             for (int x = 0; x < nx; ++x) {
                 for (int y = 0; y <= k; ++y) {
-                    ++work[256*x + src[y*nx + x]];
+                    ++worki.data[256*x + src[y*nx + x]];
                 }
             }
 
@@ -1228,8 +1173,8 @@ namespace ggimg {
                 std::fill(hker, hker + 256, 0);
                 for (int i = 0; i <= k; ++i) {
                     for (j = 0; j < 256; ++j) {
-                        hker[j] += work[256*i + j];
-                        nker += work[256*i + j];
+                        hker[j] += worki.data[256*i + j];
+                        nker += worki.data[256*i + j];
                     }
                 }
 
@@ -1241,8 +1186,8 @@ namespace ggimg {
                     dst[y*nx + x] = j - 1;
 
                     for (j = 0; j < 256; ++j) {
-                        hker[j] += work[256*(x + k + 1) + j];
-                        nker += work[256*(x + k + 1) + j];
+                        hker[j] += worki.data[256*(x + k + 1) + j];
+                        nker += worki.data[256*(x + k + 1) + j];
                     }
                 }
 
@@ -1254,13 +1199,13 @@ namespace ggimg {
                     dst[y*nx + x] = j - 1;
 
                     for (j = 0; j < 256; ++j) {
-                        hker[j] -= work[256*(x - k) + j];
-                        nker -= work[256*(x - k) + j];
+                        hker[j] -= worki.data[256*(x - k) + j];
+                        nker -= worki.data[256*(x - k) + j];
                     }
 
                     for (j = 0; j < 256; ++j) {
-                        hker[j] += work[256*(x + k + 1) + j];
-                        nker += work[256*(x + k + 1) + j];
+                        hker[j] += worki.data[256*(x + k + 1) + j];
+                        nker += worki.data[256*(x + k + 1) + j];
                     }
                 }
 
@@ -1272,13 +1217,13 @@ namespace ggimg {
                     dst[y*nx + x] = j - 1;
 
                     for (j = 0; j < 256; ++j) {
-                        hker[j] -= work[256*(x - k) + j];
-                        nker -= work[256*(x - k) + j];
+                        hker[j] -= worki.data[256*(x - k) + j];
+                        nker -= worki.data[256*(x - k) + j];
                     }
                 }
 
                 for (int x = 0; x < nx; ++x) {
-                    ++work[256*x + src[(y + k + 1)*nx + x]];
+                    ++worki.data[256*x + src[(y + k + 1)*nx + x]];
                 }
             }
 
@@ -1287,8 +1232,8 @@ namespace ggimg {
                 std::fill(hker, hker + 256, 0);
                 for (int i = 0; i <= k; ++i) {
                     for (j = 0; j < 256; ++j) {
-                        hker[j] += work[256*i + j];
-                        nker += work[256*i + j];
+                        hker[j] += worki.data[256*i + j];
+                        nker += worki.data[256*i + j];
                     }
                 }
 
@@ -1300,8 +1245,8 @@ namespace ggimg {
                     dst[y*nx + x] = j - 1;
 
                     for (j = 0; j < 256; ++j) {
-                        hker[j] += work[256*(x + k + 1) + j];
-                        nker += work[256*(x + k + 1) + j];
+                        hker[j] += worki.data[256*(x + k + 1) + j];
+                        nker += worki.data[256*(x + k + 1) + j];
                     }
                 }
 
@@ -1313,13 +1258,13 @@ namespace ggimg {
                     dst[y*nx + x] = j - 1;
 
                     for (j = 0; j < 256; ++j) {
-                        hker[j] -= work[256*(x - k) + j];
-                        nker -= work[256*(x - k) + j];
+                        hker[j] -= worki.data[256*(x - k) + j];
+                        nker -= worki.data[256*(x - k) + j];
                     }
 
                     for (j = 0; j < 256; ++j) {
-                        hker[j] += work[256*(x + k + 1) + j];
-                        nker += work[256*(x + k + 1) + j];
+                        hker[j] += worki.data[256*(x + k + 1) + j];
+                        nker += worki.data[256*(x + k + 1) + j];
                     }
                 }
 
@@ -1331,14 +1276,14 @@ namespace ggimg {
                     dst[y*nx + x] = j - 1;
 
                     for (j = 0; j < 256; ++j) {
-                        hker[j] -= work[256*(x - k) + j];
-                        nker -= work[256*(x - k) + j];
+                        hker[j] -= worki.data[256*(x - k) + j];
+                        nker -= worki.data[256*(x - k) + j];
                     }
                 }
 
                 for (int x = 0; x < nx; ++x) {
-                    --work[256*x + src[(y - k)*nx + x]];
-                    ++work[256*x + src[(y + k + 1)*nx + x]];
+                    --worki.data[256*x + src[(y - k)*nx + x]];
+                    ++worki.data[256*x + src[(y + k + 1)*nx + x]];
                 }
             }
 
@@ -1347,8 +1292,8 @@ namespace ggimg {
                 std::fill(hker, hker + 256, 0);
                 for (int i = 0; i <= k; ++i) {
                     for (j = 0; j < 256; ++j) {
-                        hker[j] += work[256*i + j];
-                        nker += work[256*i + j];
+                        hker[j] += worki.data[256*i + j];
+                        nker += worki.data[256*i + j];
                     }
                 }
 
@@ -1360,8 +1305,8 @@ namespace ggimg {
                     dst[y*nx + x] = j - 1;
 
                     for (j = 0; j < 256; ++j) {
-                        hker[j] += work[256*(x + k + 1) + j];
-                        nker += work[256*(x + k + 1) + j];
+                        hker[j] += worki.data[256*(x + k + 1) + j];
+                        nker += worki.data[256*(x + k + 1) + j];
                     }
                 }
 
@@ -1373,13 +1318,13 @@ namespace ggimg {
                     dst[y*nx + x] = j - 1;
 
                     for (j = 0; j < 256; ++j) {
-                        hker[j] -= work[256*(x - k) + j];
-                        nker -= work[256*(x - k) + j];
+                        hker[j] -= worki.data[256*(x - k) + j];
+                        nker -= worki.data[256*(x - k) + j];
                     }
 
                     for (j = 0; j < 256; ++j) {
-                        hker[j] += work[256*(x + k + 1) + j];
-                        nker += work[256*(x + k + 1) + j];
+                        hker[j] += worki.data[256*(x + k + 1) + j];
+                        nker += worki.data[256*(x + k + 1) + j];
                     }
                 }
 
@@ -1391,68 +1336,51 @@ namespace ggimg {
                     dst[y*nx + x] = j - 1;
 
                     for (j = 0; j < 256; ++j) {
-                        hker[j] -= work[256*(x - k) + j];
-                        nker -= work[256*(x - k) + j];
+                        hker[j] -= worki.data[256*(x - k) + j];
+                        nker -= worki.data[256*(x - k) + j];
                     }
                 }
 
                 for (int x = 0; x < nx; ++x) {
-                    --work[256*x + src[(y - k)*nx + x]];
+                    --worki.data[256*x + src[(y - k)*nx + x]];
                 }
             }
-
-            if (wdelete) delete [] work;
 
             return true;
         }
 
     template <typename T>
-        bool median_filter_2d_gray(int nx, int ny, const T * src, T * dst, int k, int nw, int * work, bool wzero) {
-            return median_filter_2d(nx, ny, src, dst, k, nw, work, wzero);
+        bool median_filter_2d_gray(int nx, int ny, const T * src, T * dst, int k, buffer<int> && worki) {
+            return median_filter_2d(nx, ny, src, dst, k, std::move(worki));
         }
 
     template <>
-        inline bool median_filter_2d_rgb<uint8_t>(int nx, int ny, const uint8_t * src, uint8_t * dst, int k, int nw, int * work, bool wzero) {
+        inline bool median_filter_2d_rgb<uint8_t>(int nx, int ny, const uint8_t * src, uint8_t * dst, int k, buffer<uint8_t> && workb, buffer<int> && worki) {
             if (nx <= 0) return false;
             if (ny <= 0) return false;
             if (k < 1) return false;
             if (src == nullptr) return false;
             if (dst == nullptr) return false;
 
-            int wsize = 256*nx;
+            workb.need = 2*nx*ny;
+            if (workb.init() == false) return false;
 
             bool res = true;
-            bool wdelete = false;
 
-            if (work) {
-                if (nw < wsize) return false;
-            } else {
-                wdelete = true;
-                work = new int[wsize];
-                wzero = true;
-            }
-
-            uint8_t * work0 = new uint8_t[nx*ny];
-            uint8_t * work1 = new uint8_t[nx*ny];
+            uint8_t * work0 = workb.data.data();
+            uint8_t * work1 = workb.data.data() + nx*ny;
 
             res &= rgb_to_r_2d(nx, ny, src, work0);
-            res &= median_filter_2d_gray(nx, ny, work0, work1, k, 256*nx, work, wzero);
+            res &= median_filter_2d_gray(nx, ny, work0, work1, k, std::move(worki));
             res &= r_to_rgb_2d(nx, ny, work1, dst);
 
             res &= rgb_to_g_2d(nx, ny, src, work0);
-            res &= median_filter_2d_gray(nx, ny, work0, work1, k, 256*nx, work, true);
+            res &= median_filter_2d_gray(nx, ny, work0, work1, k, std::move(worki));
             res &= g_to_rgb_2d(nx, ny, work1, dst);
 
             res &= rgb_to_b_2d(nx, ny, src, work0);
-            res &= median_filter_2d_gray(nx, ny, work0, work1, k, 256*nx, work, true);
+            res &= median_filter_2d_gray(nx, ny, work0, work1, k, std::move(worki));
             res &= b_to_rgb_2d(nx, ny, work1, dst);
-
-            delete [] work0;
-            delete [] work1;
-
-            if (wdelete) {
-                delete [] work;
-            }
 
             return res;
         }
@@ -1543,7 +1471,7 @@ namespace ggimg {
 
 namespace ggimg {
     template <typename T>
-        bool convolve_3d(int nx, int ny, int nz, const T * src, T * dst, int nk, const float * k, int nthreads, int nw, T * work, bool wzero) {
+        bool convolve_3d(int nx, int ny, int nz, const T * src, T * dst, int nk, const float * k, int nthreads, buffer<T> && workt) {
             if (nx <= 0 || ny <= 0 || nz <= 0) return false;
             if (src == nullptr || dst == nullptr) return false;
             if (k == nullptr) return false;
@@ -1551,8 +1479,14 @@ namespace ggimg {
             if (nk % 2 == 0) return false;
             if (nthreads < 1) return false;
 
-            int n = nx*ny*nz;
-            if (n <= 1) return false;
+            int kw = nk/2;
+            int nx1 = nx + 2*kw;
+            int ny1 = ny + 2*kw;
+            int nz1 = nz + 2*kw;
+            int n1 = nx1*ny1*nz1;
+
+            workt.need = 2*n1;
+            if (workt.init() == false) return false;
 
             float inorm = 0.0;
             for (int i = 0; i < nk; ++i) {
@@ -1561,55 +1495,38 @@ namespace ggimg {
             if (std::fabs(inorm) < 1e-3) return false;
             inorm = 1.0/inorm;
 
-            int kw = nk/2;
-            int nx1 = nx + 2*kw;
-            int ny1 = ny + 2*kw;
-            int nz1 = nz + 2*kw;
-            int n1 = nx1*ny1*nz1;
+            T * tmp0 = workt.data.data();
+            T * tmp1 = workt.data.data() + n1;
 
-            bool wdelete = false;
-            if (work == nullptr) {
-                wdelete = true;
-                work = new T[2*n1];
-                wzero = true;
-            } else if (nw < 2*n1) {
-                return false;
+            for (int iz = 0; iz < nz1; ++iz) {
+                for (int iy = 0; iy < ny1; ++iy) {
+                    for (int ix = 0; ix < kw; ++ix) {
+                        tmp0[iz*ny1*nx1 + iy*nx1 + ix] = 0;
+                        tmp0[iz*ny1*nx1 + iy*nx1 + (nx1 - ix - 1)] = 0;
+                        tmp1[iz*ny1*nx1 + iy*nx1 + ix] = 0;
+                        tmp1[iz*ny1*nx1 + iy*nx1 + (nx1 - ix - 1)] = 0;
+                    }
+                }
             }
 
-            T * tmp0 = work;
-            T * tmp1 = work + n1;
-
-            if (wzero) {
-                for (int iz = 0; iz < nz1; ++iz) {
-                    for (int iy = 0; iy < ny1; ++iy) {
-                        for (int ix = 0; ix < kw; ++ix) {
-                            tmp0[iz*ny1*nx1 + iy*nx1 + ix] = 0;
-                            tmp0[iz*ny1*nx1 + iy*nx1 + (nx1 - ix - 1)] = 0;
-                            tmp1[iz*ny1*nx1 + iy*nx1 + ix] = 0;
-                            tmp1[iz*ny1*nx1 + iy*nx1 + (nx1 - ix - 1)] = 0;
-                        }
+            for (int iz = 0; iz < nz1; ++iz) {
+                for (int iy = 0; iy < kw; ++iy) {
+                    for (int ix = 0; ix < nx1; ++ix) {
+                        tmp0[iz*ny1*nx1 + iy*nx1 + ix] = 0;
+                        tmp0[iz*ny1*nx1 + (ny1 - iy - 1)*nx1 + ix] = 0;
+                        tmp1[iz*ny1*nx1 + iy*nx1 + ix] = 0;
+                        tmp1[iz*ny1*nx1 + (ny1 - iy - 1)*nx1 + ix] = 0;
                     }
                 }
+            }
 
-                for (int iz = 0; iz < nz1; ++iz) {
-                    for (int iy = 0; iy < kw; ++iy) {
-                        for (int ix = 0; ix < nx1; ++ix) {
-                            tmp0[iz*ny1*nx1 + iy*nx1 + ix] = 0;
-                            tmp0[iz*ny1*nx1 + (ny1 - iy - 1)*nx1 + ix] = 0;
-                            tmp1[iz*ny1*nx1 + iy*nx1 + ix] = 0;
-                            tmp1[iz*ny1*nx1 + (ny1 - iy - 1)*nx1 + ix] = 0;
-                        }
-                    }
-                }
-
-                for (int iz = 0; iz < kw; ++iz) {
-                    for (int iy = 0; iy < ny1; ++iy) {
-                        for (int ix = 0; ix < nx1; ++ix) {
-                            tmp0[iz*ny1*nx1 + iy*nx1 + ix] = 0;
-                            tmp0[(nz1 - iz - 1)*ny1*nx1 + iy*nx1 + ix] = 0;
-                            tmp1[iz*ny1*nx1 + iy*nx1 + ix] = 0;
-                            tmp1[(nz1 - iz - 1)*ny1*nx1 + iy*nx1 + ix] = 0;
-                        }
+            for (int iz = 0; iz < kw; ++iz) {
+                for (int iy = 0; iy < ny1; ++iy) {
+                    for (int ix = 0; ix < nx1; ++ix) {
+                        tmp0[iz*ny1*nx1 + iy*nx1 + ix] = 0;
+                        tmp0[(nz1 - iz - 1)*ny1*nx1 + iy*nx1 + ix] = 0;
+                        tmp1[iz*ny1*nx1 + iy*nx1 + ix] = 0;
+                        tmp1[(nz1 - iz - 1)*ny1*nx1 + iy*nx1 + ix] = 0;
                     }
                 }
             }
@@ -1694,15 +1611,11 @@ namespace ggimg {
                 for (auto & worker : workers) worker.join();
             }
 
-            if (wdelete) {
-                delete [] work;
-            }
-
             return true;
         }
 
     template <typename T>
-        bool gaussian_filter_3d(int nx, int ny, int nz, const T * src, T * dst, float sigma, int nthreads, int nw, T * work, bool wzero) {
+        bool gaussian_filter_3d(int nx, int ny, int nz, const T * src, T * dst, float sigma, int nthreads, buffer<T> && workt) {
             if (sigma <= 0.0) {
                 for (int i = 0; i < nx*ny*nz; ++i) dst[i] = src[i];
                 return true;
@@ -1717,7 +1630,7 @@ namespace ggimg {
             }
             k[nk] = 1;
 
-            return convolve_3d(nx, ny, nz, src, dst, k.size(), k.data(), nthreads, nw, work, wzero);
+            return convolve_3d(nx, ny, nz, src, dst, k.size(), k.data(), nthreads, std::move(workt));
         }
 
     template <typename T>
