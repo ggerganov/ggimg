@@ -87,7 +87,9 @@ int main(int argc, char ** argv) {
     Image2D img_gradient_y;
     Image2D img_gradient_xy;
     Image2D img_scale_nn;
+    Image2D img_scale_nn_maxside;
     Image2D img_scale_li;
+    Image2D img_scale_li_maxside;
     Image2D img_transform_homography_gray_nn;
     Image2D img_transform_homography_rgb_nn;
 
@@ -272,6 +274,15 @@ int main(int argc, char ** argv) {
         }
 
         write_ppm("ggimg_scale_nn.ppm", snx, sny, img_scale_nn, 1);
+
+        int snx2 = -1;
+        int sny2 = -1;
+        if (ggimg::scale_nn_maxside_2d(snx, sny, img_scale_nn.data(), 513, snx2, sny2, img_scale_nn_maxside) == false) {
+            printf("Failed ggimg::scale_nn_maxside_2d\n");
+            return -1;
+        }
+
+        write_ppm("ggimg_scale_maxside.ppm", snx2, sny2, img_scale_nn_maxside, 1);
     }
 
     {
@@ -285,6 +296,17 @@ int main(int argc, char ** argv) {
         }
 
         write_ppm("ggimg_scale_li.ppm", snx, sny, img_scale_li, 1);
+
+        printf("[+] ggimg::scale_li_maxside_2d\n");
+
+        int snx2 = -1;
+        int sny2 = -1;
+        if (ggimg::scale_li_maxside_2d(snx, sny, img_scale_li.data(), 513, snx2, sny2, img_scale_li_maxside) == false) {
+            printf("Failed ggimg::scale_li_maxside_2d\n");
+            return -1;
+        }
+
+        write_ppm("ggimg_scale_maxside.ppm", snx2, sny2, img_scale_li_maxside, 1);
     }
 
     {

@@ -18,88 +18,90 @@ namespace ggimg {
     //
 
     /*! \brief RGB pixel to luminance Rec. 601: Y = 0.2989 R + 0.5870 G + 0.1140 B */
-    template <typename T> static inline float rgb_to_luma601(T r, T g, T b) { return 0.2989f*((float)(r)) + 0.5870f*((float)(g)) + 0.1140f*((float)(b)); }
-    template <typename T> static inline float rgb_to_luma601(const T * p) { return rgb_to_luma601(*p, *(p + 1), *(p + 2)); }
+    template <typename T> inline float rgb_to_luma601(T r, T g, T b) { return 0.2989f*((float)(r)) + 0.5870f*((float)(g)) + 0.1140f*((float)(b)); }
+    template <typename T> inline float rgb_to_luma601(const T * p) { return rgb_to_luma601(*p, *(p + 1), *(p + 2)); }
 
     /*! \brief RGB pixel to luminance Rec. 709: Y = 0.2126 R + 0.7152 G + 0.0722 B */
-    template <typename T> static inline float rgb_to_luma709(T r, T g, T b) { return 0.2126f*((float)(r)) + 0.7152f*((float)(g)) + 0.0722f*((float)(b)); }
-    template <typename T> static inline float rgb_to_luma709(const T * p) { return rgb_to_luma709(*p, *(p + 1), *(p + 2)); }
+    template <typename T> inline float rgb_to_luma709(T r, T g, T b) { return 0.2126f*((float)(r)) + 0.7152f*((float)(g)) + 0.0722f*((float)(b)); }
+    template <typename T> inline float rgb_to_luma709(const T * p) { return rgb_to_luma709(*p, *(p + 1), *(p + 2)); }
 
-    template <typename T> static bool rgb_to_luma601_2d(int nx, int ny, const T * src, T * dst);
-    template <typename T> static bool rgb_to_luma601_3d(int nx, int ny, int nz, const T * src, T * dst);
-    template <typename T> static bool rgb_to_luma709_2d(int nx, int ny, const T * src, T * dst);
-    template <typename T> static bool rgb_to_luma709_3d(int nx, int ny, int nz, const T * src, T * dst);
-    template <typename T> static bool rgb_to_gray_2d(int nx, int ny, const T * src, T * dst);
-    template <typename T> static bool rgb_to_gray_3d(int nx, int ny, int nz, const T * src, T * dst);
-    template <typename T> static bool rgb_to_c_2d(int nx, int ny, int c, const T * src, T * dst);
-    template <typename T> static bool rgb_to_c_3d(int nx, int ny, int nz, int c, const T * src, T * dst);
-    template <typename T> static bool rgb_to_r_2d(int nx, int ny, const T * src, T * dst);
-    template <typename T> static bool rgb_to_r_3d(int nx, int ny, int nz, const T * src, T * dst);
-    template <typename T> static bool rgb_to_g_2d(int nx, int ny, const T * src, T * dst);
-    template <typename T> static bool rgb_to_g_3d(int nx, int ny, int nz, const T * src, T * dst);
-    template <typename T> static bool rgb_to_b_2d(int nx, int ny, const T * src, T * dst);
-    template <typename T> static bool rgb_to_b_3d(int nx, int ny, int nz, const T * src, T * dst);
-    template <typename T> static bool c_to_rgb_2d(int nx, int ny, int c, const T * src, T * dst);
-    template <typename T> static bool c_to_rgb_3d(int nx, int ny, int nz, int c, const T * src, T * dst);
-    template <typename T> static bool r_to_rgb_2d(int nx, int ny, const T * src, T * dst);
-    template <typename T> static bool r_to_rgb_3d(int nx, int ny, int nz, const T * src, T * dst);
-    template <typename T> static bool g_to_rgb_2d(int nx, int ny, const T * src, T * dst);
-    template <typename T> static bool g_to_rgb_3d(int nx, int ny, int nz, const T * src, T * dst);
-    template <typename T> static bool b_to_rgb_2d(int nx, int ny, const T * src, T * dst);
-    template <typename T> static bool b_to_rgb_3d(int nx, int ny, int nz, const T * src, T * dst);
-    template <typename T> static bool gray_to_rgb_2d(int nx, int ny, const T * src, T * dst);
-    template <typename T> static bool gray_to_rgb_3d(int nx, int ny, int nz, const T * src, T * dst);
+    template <typename T> bool rgb_to_luma601_2d(int nx, int ny, const T * src, T * dst);
+    template <typename T> bool rgb_to_luma601_3d(int nx, int ny, int nz, const T * src, T * dst);
+    template <typename T> bool rgb_to_luma709_2d(int nx, int ny, const T * src, T * dst);
+    template <typename T> bool rgb_to_luma709_3d(int nx, int ny, int nz, const T * src, T * dst);
+    template <typename T> bool rgb_to_gray_2d(int nx, int ny, const T * src, T * dst);
+    template <typename T> bool rgb_to_gray_3d(int nx, int ny, int nz, const T * src, T * dst);
+    template <typename T> bool rgb_to_c_2d(int nx, int ny, int c, const T * src, T * dst);
+    template <typename T> bool rgb_to_c_3d(int nx, int ny, int nz, int c, const T * src, T * dst);
+    template <typename T> bool rgb_to_r_2d(int nx, int ny, const T * src, T * dst);
+    template <typename T> bool rgb_to_r_3d(int nx, int ny, int nz, const T * src, T * dst);
+    template <typename T> bool rgb_to_g_2d(int nx, int ny, const T * src, T * dst);
+    template <typename T> bool rgb_to_g_3d(int nx, int ny, int nz, const T * src, T * dst);
+    template <typename T> bool rgb_to_b_2d(int nx, int ny, const T * src, T * dst);
+    template <typename T> bool rgb_to_b_3d(int nx, int ny, int nz, const T * src, T * dst);
+    template <typename T> bool c_to_rgb_2d(int nx, int ny, int c, const T * src, T * dst);
+    template <typename T> bool c_to_rgb_3d(int nx, int ny, int nz, int c, const T * src, T * dst);
+    template <typename T> bool r_to_rgb_2d(int nx, int ny, const T * src, T * dst);
+    template <typename T> bool r_to_rgb_3d(int nx, int ny, int nz, const T * src, T * dst);
+    template <typename T> bool g_to_rgb_2d(int nx, int ny, const T * src, T * dst);
+    template <typename T> bool g_to_rgb_3d(int nx, int ny, int nz, const T * src, T * dst);
+    template <typename T> bool b_to_rgb_2d(int nx, int ny, const T * src, T * dst);
+    template <typename T> bool b_to_rgb_3d(int nx, int ny, int nz, const T * src, T * dst);
+    template <typename T> bool gray_to_rgb_2d(int nx, int ny, const T * src, T * dst);
+    template <typename T> bool gray_to_rgb_3d(int nx, int ny, int nz, const T * src, T * dst);
 
-    template <typename TSrc, typename TDst> static bool convert_2d(int nx, int ny, TSrc smin, TSrc smax, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
-    template <typename TSrc, typename TDst> static bool convert_3d(int nx, int ny, int nz, TSrc smin, TSrc smax, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
+    template <typename TSrc, typename TDst> bool convert_2d(int nx, int ny, TSrc smin, TSrc smax, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
+    template <typename TSrc, typename TDst> bool convert_3d(int nx, int ny, int nz, TSrc smin, TSrc smax, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
 
-    template <typename TSrc, typename TDst> static bool normalize_2d(int nx, int ny, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
-    template <typename TSrc, typename TDst> static bool normalize_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
-    template <typename TSrc, typename TDst> static bool normalize_robust_2d(int nx, int ny, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
-    template <typename TSrc, typename TDst> static bool normalize_robust_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
+    template <typename TSrc, typename TDst> bool normalize_2d(int nx, int ny, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
+    template <typename TSrc, typename TDst> bool normalize_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
+    template <typename TSrc, typename TDst> bool normalize_robust_2d(int nx, int ny, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
+    template <typename TSrc, typename TDst> bool normalize_robust_3d(int nx, int ny, int nz, const TSrc * src, TDst dmin, TDst dmax, TDst * dst);
 
-    template <typename T> static bool normalize_hist_2d(int nx, int ny, const T * src, T * dst, T dmax, int nw = 0, int * work = nullptr, bool wzero = true);
-    template <typename T> static bool normalize_hist_3d(int nx, int ny, int nz, const T * src, T * dst, T dmax, int nw = 0, int * work = nullptr, bool wzero = true);
+    template <typename T> bool normalize_hist_2d(int nx, int ny, const T * src, T * dst, T dmax, int nw = 0, int * work = nullptr, bool wzero = true);
+    template <typename T> bool normalize_hist_3d(int nx, int ny, int nz, const T * src, T * dst, T dmax, int nw = 0, int * work = nullptr, bool wzero = true);
 
-    template <typename T> static bool gradient_sobel_2d(bool doX, bool doY, int nx, int ny, const T * src, float * dst);
-    template <typename TSrc, typename TDst> static bool gradient_sobel_2d(int mode, int nx, int ny, const TSrc * src, TDst dmax, TDst * dst, int nw = 0, float * work = nullptr);
+    template <typename T> bool gradient_sobel_2d(bool doX, bool doY, int nx, int ny, const T * src, float * dst);
+    template <typename TSrc, typename TDst> bool gradient_sobel_2d(int mode, int nx, int ny, const TSrc * src, TDst dmax, TDst * dst, int nw = 0, float * work = nullptr);
 
-    template <typename T> static bool gradient_sobel_3d(bool doX, bool doY, bool doZ, int nx, int ny, int nz, const T * src, float * dst);
-    template <typename TSrc, typename TDst> static bool gradient_sobel_3d(int mode, int nx, int ny, int nz, const TSrc * src, TDst dmax, TDst * dst, int nw = 0, float * work = nullptr);
+    template <typename T> bool gradient_sobel_3d(bool doX, bool doY, bool doZ, int nx, int ny, int nz, const T * src, float * dst);
+    template <typename TSrc, typename TDst> bool gradient_sobel_3d(int mode, int nx, int ny, int nz, const TSrc * src, TDst dmax, TDst * dst, int nw = 0, float * work = nullptr);
 
-    template <typename T> static bool convolve_2d(int nx, int ny, const T * src, T * dst, int nk, const float * k, int nw = 0, T * work = nullptr, bool wzero = true);
+    template <typename T> bool convolve_2d(int nx, int ny, const T * src, T * dst, int nk, const float * k, int nw = 0, T * work = nullptr, bool wzero = true);
 
-    template <typename T> static bool gaussian_filter_2d(int nx, int ny, const T * src, T * dst, float sigma, int nw = 0, T * work = nullptr, bool wzero = true);
-    template <typename T> static bool gaussian_filter_gray_2d(int nx, int ny, const T * src, T * dst, float sigma, int nw = 0, T * work = nullptr, bool wzero = true);
-    template <typename T> static bool gaussian_filter_rgb_2d(int nx, int ny, const T * src, T * dst, float sigma, int nw = 0, T * work = nullptr, bool wzero = true);
+    template <typename T> bool gaussian_filter_2d(int nx, int ny, const T * src, T * dst, float sigma, int nw = 0, T * work = nullptr, bool wzero = true);
+    template <typename T> bool gaussian_filter_gray_2d(int nx, int ny, const T * src, T * dst, float sigma, int nw = 0, T * work = nullptr, bool wzero = true);
+    template <typename T> bool gaussian_filter_rgb_2d(int nx, int ny, const T * src, T * dst, float sigma, int nw = 0, T * work = nullptr, bool wzero = true);
 
-    template <typename T> static bool median_filter_2d(int nx, int ny, const T * src, T * dst, int k, int nw = 0, int * work = nullptr, bool wzero = true);
-    template <typename T> static bool median_filter_gray_2d(int nx, int ny, const T * src, T * dst, int k, int nw = 0, int * work = nullptr, bool wzero = true);
-    template <typename T> static bool median_filter_rgb_2d(int nx, int ny, const T * src, T * dst, int k, int nw = 0, int * work = nullptr, bool wzero = true);
+    template <typename T> bool median_filter_2d(int nx, int ny, const T * src, T * dst, int k, int nw = 0, int * work = nullptr, bool wzero = true);
+    template <typename T> bool median_filter_gray_2d(int nx, int ny, const T * src, T * dst, int k, int nw = 0, int * work = nullptr, bool wzero = true);
+    template <typename T> bool median_filter_rgb_2d(int nx, int ny, const T * src, T * dst, int k, int nw = 0, int * work = nullptr, bool wzero = true);
 
-    template <typename T> static bool scale_nn_2d(int snx, int sny, const T * src, float sx, float sy, int & dnx, int & dny, std::vector<T> & dst);
-    template <typename T> static bool scale_nn_isotropic_2d(int snx, int sny, const T * src, float s, int & dnx, int & dny, std::vector<T> & dst);
+    template <typename T> bool scale_nn_2d(int snx, int sny, const T * src, float sx, float sy, int & dnx, int & dny, std::vector<T> & dst);
+    template <typename T> bool scale_nn_isotropic_2d(int snx, int sny, const T * src, float s, int & dnx, int & dny, std::vector<T> & dst);
+    template <typename T> bool scale_nn_maxside_2d(int snx, int sny, const T * src, int maxn, int & dnx, int & dny, std::vector<T> & dst);
 
-    template <typename T> static bool scale_li_2d(int snx, int sny, const T * src, float sx, float sy, int & dnx, int & dny, std::vector<T> & dst);
-    template <typename T> static bool scale_li_isotropic_2d(int snx, int sny, const T * src, float s, int & dnx, int & dny, std::vector<T> & dst);
+    template <typename T> bool scale_li_2d(int snx, int sny, const T * src, float sx, float sy, int & dnx, int & dny, std::vector<T> & dst);
+    template <typename T> bool scale_li_isotropic_2d(int snx, int sny, const T * src, float s, int & dnx, int & dny, std::vector<T> & dst);
+    template <typename T> bool scale_li_maxside_2d(int snx, int sny, const T * src, int maxn, int & dnx, int & dny, std::vector<T> & dst);
 
-    template <typename T> static bool transform_homography_nn(int snx, int sny, const T * src, std::array<float, 9> h, int dnx, int dny, T * dst);
-    template <typename T> static bool transform_homography_gray_nn(int snx, int sny, const T * src, std::array<float, 9> h, int dnx, int dny, T * dst);
-    template <typename T> static bool transform_homography_rgb_nn(int snx, int sny, const T * src, std::array<float, 9> h, int dnx, int dny, T * dst);
+    template <typename T> bool transform_homography_nn(int snx, int sny, const T * src, std::array<float, 9> h, int dnx, int dny, T * dst);
+    template <typename T> bool transform_homography_gray_nn(int snx, int sny, const T * src, std::array<float, 9> h, int dnx, int dny, T * dst);
+    template <typename T> bool transform_homography_rgb_nn(int snx, int sny, const T * src, std::array<float, 9> h, int dnx, int dny, T * dst);
 
     //
     // Multi-threaded operations (to enable, define GGIMG_MT before including this header)
     //
 
-    template <typename T> static bool convolve_3d(int nx, int ny, int nz, const T * src, T * dst, int nk, const float * k, int nthreads = 1, int nw = 0, T * work = nullptr, bool wzero = true);
-    template <typename T> static bool gaussian_filter_3d(int nx, int ny, int nz, const T * src, T * dst, float sigma, int nthreads = 1, int nw = 0, T * work = nullptr, bool wzero = true);
-    template <typename T> static bool median_filter_3d(int nx, int ny, int nz, const T * src, T * dst, int k, int nthreads = 1, int nw = 0, int * work = nullptr, bool wzero = true);
+    template <typename T> bool convolve_3d(int nx, int ny, int nz, const T * src, T * dst, int nk, const float * k, int nthreads = 1, int nw = 0, T * work = nullptr, bool wzero = true);
+    template <typename T> bool gaussian_filter_3d(int nx, int ny, int nz, const T * src, T * dst, float sigma, int nthreads = 1, int nw = 0, T * work = nullptr, bool wzero = true);
+    template <typename T> bool median_filter_3d(int nx, int ny, int nz, const T * src, T * dst, int k, int nthreads = 1, int nw = 0, int * work = nullptr, bool wzero = true);
 
-    template <typename T> static bool scale_nn_3d(int snx, int sny, int snz, const T * src, float sx, float sy, float sz, int & dnx, int & dny, int & dnz, std::vector<T> & dst, int nthreads = 1);
-    template <typename T> static bool scale_nn_isotropic_3d(int snx, int sny, int snz, const T * src, float s, int & dnx, int & dny, int & dnz, std::vector<T> & dst, int nthreads = 1);
+    template <typename T> bool scale_nn_3d(int snx, int sny, int snz, const T * src, float sx, float sy, float sz, int & dnx, int & dny, int & dnz, std::vector<T> & dst, int nthreads = 1);
+    template <typename T> bool scale_nn_isotropic_3d(int snx, int sny, int snz, const T * src, float s, int & dnx, int & dny, int & dnz, std::vector<T> & dst, int nthreads = 1);
 
-    template <typename T> static bool scale_li_3d(int snx, int sny, int snz, const T * src, float sx, float sy, float sz, int & dnx, int & dny, int & dnz, std::vector<T> & dst, int nthreads = 1);
-    template <typename T> static bool scale_li_isotropic_3d(int snx, int sny, int snz, const T * src, float s, int & dnx, int & dny, int & dnz, std::vector<T> & dst, int nthreads = 1);
+    template <typename T> bool scale_li_3d(int snx, int sny, int snz, const T * src, float sx, float sy, float sz, int & dnx, int & dny, int & dnz, std::vector<T> & dst, int nthreads = 1);
+    template <typename T> bool scale_li_isotropic_3d(int snx, int sny, int snz, const T * src, float s, int & dnx, int & dny, int & dnz, std::vector<T> & dst, int nthreads = 1);
 
 }
 
@@ -421,30 +423,28 @@ namespace ggimg {
             int nx1 = nx - 1;
             int ny1 = ny - 1;
 
-            int nxy = nx*ny;
-
             {
                 for (int iy = 1; iy < ny1; ++iy) {
                     for (int ix = 1; ix < nx1; ++ix) {
                         int id = iy*nx + ix;
                         float g1 = 0;
                         if (doX) {
-                            g1 += 1.0f*src[id - 1 - nx      ];
-                            g1 += 2.0f*src[id - 1           ];
-                            g1 += 1.0f*src[id - 1 + nx      ];
-                            g1 -= 1.0f*src[id + 1 - nx      ];
-                            g1 -= 2.0f*src[id + 1           ];
-                            g1 -= 1.0f*src[id + 1 + nx      ];
+                            g1 += 1.0f*src[id - 1 - nx];
+                            g1 += 2.0f*src[id - 1     ];
+                            g1 += 1.0f*src[id - 1 + nx];
+                            g1 -= 1.0f*src[id + 1 - nx];
+                            g1 -= 2.0f*src[id + 1     ];
+                            g1 -= 1.0f*src[id + 1 + nx];
                         }
 
                         float g2 = 0;
                         if (doY) {
-                            g2 += 1.0f*src[id - 1 - nx      ];
-                            g2 += 2.0f*src[id     - nx      ];
-                            g2 += 1.0f*src[id + 1 - nx      ];
-                            g2 -= 1.0f*src[id - 1 + nx      ];
-                            g2 -= 2.0f*src[id     + nx      ];
-                            g2 -= 1.0f*src[id + 1 + nx      ];
+                            g2 += 1.0f*src[id - 1 - nx];
+                            g2 += 2.0f*src[id     - nx];
+                            g2 += 1.0f*src[id + 1 - nx];
+                            g2 -= 1.0f*src[id - 1 + nx];
+                            g2 -= 2.0f*src[id     + nx];
+                            g2 -= 1.0f*src[id + 1 + nx];
                         }
 
                         dst[id] = sqrt(g1*g1 + g2*g2);
@@ -936,7 +936,56 @@ namespace ggimg {
                 delete [] work;
             }
 
+            return res;
+        }
+
+    template <typename T>
+        bool scale_nn_2d(int snx, int sny, const T * src, float sx, float sy, int & dnx, int & dny, std::vector<T> & dst) {
+            if (snx <= 0) return false;
+            if (sny <= 0) return false;
+            if (src == nullptr) return false;
+            if (sx <= 0.0f) return false;
+            if (sy <= 0.0f) return false;
+
+            if (src == dst.data()) return false;
+
+            dnx = std::round(snx*sx);
+            dny = std::round(sny*sy);
+
+            if (dnx <= 0) return false;
+            if (dny <= 0) return false;
+
+            dst.resize(dnx*dny);
+
+            {
+                float cx = ((float)(snx))/dnx;
+                float cy = ((float)(sny))/dny;
+
+                for (int iy = 0; iy < dny; ++iy) {
+                    float fy = ((float)(iy) + 0.5f)*cy;
+                    int iy0 = std::round(fy - 0.5f);
+                    fy -= (0.5f + (float)(iy0));
+                    for (int ix = 0; ix < dnx; ++ix) {
+                        float fx = ((float)(ix) + 0.5f)*cx;
+                        int ix0 = std::round(fx - 0.5f);
+                        dst[iy*dnx + ix] = src[iy0*snx + ix0];
+                    }
+                }
+            }
+
             return true;
+        }
+
+    template <typename T>
+        bool scale_nn_isotropic_2d(int snx, int sny, const T * src, float s, int & dnx, int & dny, std::vector<T> & dst) {
+            return scale_nn_2d(snx, sny, src, s, s, dnx, dny, dst);
+        }
+
+    template <typename T>
+        bool scale_nn_maxside_2d(int snx, int sny, const T * src, int maxn, int & dnx, int & dny, std::vector<T> & dst) {
+            double maxsn = std::max(snx, sny);
+            float s = ((double)(maxn))/maxsn;
+            return scale_nn_isotropic_2d(snx, sny, src, s, dnx, dny, dst);
         }
 
     template <typename T>
@@ -1000,49 +1049,14 @@ namespace ggimg {
         }
 
     template <typename T>
-        bool scale_nn_2d(int snx, int sny, const T * src, float sx, float sy, int & dnx, int & dny, std::vector<T> & dst) {
-            if (snx <= 0) return false;
-            if (sny <= 0) return false;
-            if (src == nullptr) return false;
-            if (sx <= 0.0f) return false;
-            if (sy <= 0.0f) return false;
-
-            if (src == dst.data()) return false;
-
-            dnx = std::round(snx*sx);
-            dny = std::round(sny*sy);
-
-            if (dnx <= 0) return false;
-            if (dny <= 0) return false;
-
-            dst.resize(dnx*dny);
-
-            {
-                float cx = ((float)(snx))/dnx;
-                float cy = ((float)(sny))/dny;
-
-                for (int iy = 0; iy < dny; ++iy) {
-                    float fy = ((float)(iy) + 0.5f)*cy;
-                    int iy0 = std::round(fy - 0.5f);
-                    fy -= (0.5f + (float)(iy0));
-                    for (int ix = 0; ix < dnx; ++ix) {
-                        float fx = ((float)(ix) + 0.5f)*cx;
-                        int ix0 = std::round(fx - 0.5f);
-                        dst[iy*dnx + ix] = src[iy0*snx + ix0];
-                    }
-                }
-            }
-
-            return true;
-        }
-
-    template <typename T>
-        bool scale_nn_isotropic_2d(int snx, int sny, const T * src, float s, int & dnx, int & dny, std::vector<T> & dst) {
-            return scale_nn_2d(snx, sny, src, s, s, dnx, dny, dst);
+        bool scale_li_maxside_2d(int snx, int sny, const T * src, int maxn, int & dnx, int & dny, std::vector<T> & dst) {
+            double maxsn = std::max(snx, sny);
+            float s = ((double)(maxn))/maxsn;
+            return scale_li_isotropic_2d(snx, sny, src, s, dnx, dny, dst);
         }
 
     template <>
-        bool median_filter_2d<uint8_t>(int nx, int ny, const uint8_t * src, uint8_t * dst, int k, int nw, int * work, bool wzero) {
+        inline bool median_filter_2d<uint8_t>(int nx, int ny, const uint8_t * src, uint8_t * dst, int k, int nw, int * work, bool wzero) {
             if (nx <= 0) return false;
             if (ny <= 0) return false;
             if (src == nullptr) return false;
@@ -1265,8 +1279,8 @@ namespace ggimg {
             return median_filter_2d(nx, ny, src, dst, k, nw, work, wzero);
         }
 
-    template <typename uint8_t>
-        bool median_filter_rgb_2d(int nx, int ny, const uint8_t * src, uint8_t * dst, int k, int nw, int * work, bool wzero) {
+    template <>
+        inline bool median_filter_rgb_2d<uint8_t>(int nx, int ny, const uint8_t * src, uint8_t * dst, int k, int nw, int * work, bool wzero) {
             if (nx <= 0) return false;
             if (ny <= 0) return false;
             if (k < 1) return false;
@@ -1308,7 +1322,7 @@ namespace ggimg {
                 delete [] work;
             }
 
-            return true;
+            return res;
         }
 
     template <typename T>
