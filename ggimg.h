@@ -1006,6 +1006,7 @@ namespace ggimg {
 
             res &= rgb_to_r_2d(snx, sny, src, work0);
             res &= scale_nn_2d_gray(snx, sny, work0, sx, sy, dnx, dny, work1);
+            dst.resize(3*dnx*dny);
             res &= r_to_rgb_2d(dnx, dny, work1.data(), dst.data());
 
             res &= rgb_to_g_2d(snx, sny, src, work0);
