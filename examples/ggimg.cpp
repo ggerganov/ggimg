@@ -5,6 +5,7 @@
 
 #include "ggimg.h"
 
+#include <map>
 #include <cstdio>
 #include <fstream>
 #include <vector>
@@ -253,7 +254,7 @@ int main(int argc, char ** argv) {
     }
 
     {
-        printf("[+] ggimg::median_filter_rgb_2d\n");
+        printf("[+] ggimg::median_filter_2d_rgb\n");
 
         img_median_filter_rgb.resize(3*nx*ny);
         if (ggimg::median_filter_2d_rgb(nx, ny, img_rgb.data(), img_median_filter_rgb.data(), 5) == false) {
@@ -346,6 +347,33 @@ int main(int argc, char ** argv) {
 
         write_ppm("ggimg_transform_homography_nn_rgb.ppm", nx, ny, img_transform_homography_nn_rgb, 3);
     }
+
+    //{
+    //    std::map<int, Image2D> img_median_filter_rgb_converge;
+
+    //    for (int k : { 1, 2, 3, 5, 7, 10, 15 }) {
+    //        {
+    //            printf("[+] ggimg::median_filter_rgb_2d, converge, k = %d\n", k);
+
+    //            auto tmp = img_rgb;
+    //            img_median_filter_rgb_converge[k] = img_rgb;
+
+    //            for (int it = 0; it < 3; ++it) {
+    //                ggimg::median_filter_2d_rgb(nx, ny, img_median_filter_rgb_converge[k].data(), tmp.data(), k);
+
+    //                int diff = 0;
+    //                for (int i = 0; i < (int) tmp.size(); ++i) {
+    //                    diff += std::abs((int)(tmp[i]) - img_median_filter_rgb_converge[k][i]);
+    //                }
+    //                printf("    it - %d, diff = %d\n", it, diff);
+
+    //                img_median_filter_rgb_converge[k] = tmp;
+    //            }
+
+    //            write_ppm((std::string("ggimg_median_filter_rgb_converge_") + std::to_string(k) + ".ppm").c_str(), nx, ny, img_median_filter_rgb_converge[k], 3);
+    //        }
+    //    }
+    //}
 
     printf("All done\n");
 

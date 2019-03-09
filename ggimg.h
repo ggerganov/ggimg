@@ -96,9 +96,11 @@ namespace ggimg {
 
     template <typename T> bool median_filter_2d(int nx, int ny, const T * src, T * dst, int k, buffer<int> && worki = {});
     template <typename T> bool median_filter_2d_gray(int nx, int ny, const T * src, T * dst, int k, buffer<int> && worki = {});
-    template <typename T> bool median_filter_2d_rgb(int nx, int ny, const T * src, T * dst, int k, buffer<T> && workb = {}, buffer<int> && worki = {});
+    template <typename T> bool median_filter_2d_rgb(int nx, int ny, const T * src, T * dst, int k, buffer<T> && workt = {}, buffer<int> && worki = {});
 
-    template <typename T> bool lhist_filter_2d(int nx, int ny, const T * src, T * dst, int l, int k, buffer<int> && worki = {});
+    template <typename T> bool lhist_filter_2d(int nx, int ny, const T * src, int * dst, int l, int k, buffer<T> && workt = {}, buffer<int> && worki = {});
+    template <typename T> bool lhist_filter_2d_gray(int nx, int ny, const T * src, int * dst, int l, int k, buffer<T> && workt = {}, buffer<int> && worki = {});
+    template <typename T> bool lhist_filter_2d_rgb(int nx, int ny, const T * src, int * dst, int l, int k, buffer<T> && workt0 = {}, buffer<T> && workt1 = {}, buffer<int> && worki = {});
 
     template <typename T> bool scale_nn_2d(int snx, int sny, const T * src, float sx, float sy, int & dnx, int & dny, std::vector<T> & dst);
     template <typename T> bool scale_nn_2d_gray(int snx, int sny, const T * src, float sx, float sy, int & dnx, int & dny, std::vector<T> & dst);
@@ -895,10 +897,10 @@ namespace ggimg {
             workt0.need = 2*nx*ny;
             if (workt0.init() == false) return false;
 
-            bool res = true;
-
             T * work0 = workt0.data.data();
             T * work1 = workt0.data.data() + nx*ny;
+
+            bool res = true;
 
             res &= rgb_to_r_2d(nx, ny, src, work0);
             res &= gaussian_filter_2d_gray(nx, ny, work0, work1, sigma, std::move(workt1));
@@ -970,11 +972,11 @@ namespace ggimg {
 
             res &= rgb_to_r_2d(snx, sny, src, workt0.data.data());
             res &= scale_nn_2d_gray(snx, sny, workt0.data.data(), sx, sy, dnx, dny, std::move(workt1));
+            dst.resize(3*dnx*dny);
             res &= r_to_rgb_2d(dnx, dny, workt1.data.data(), dst.data());
 
             res &= rgb_to_g_2d(snx, sny, src, workt0.data.data());
             res &= scale_nn_2d_gray(snx, sny, workt0.data.data(), sx, sy, dnx, dny, std::move(workt1));
-            dst.resize(3*dnx*dny);
             res &= g_to_rgb_2d(dnx, dny, workt1.data.data(), dst.data());
 
             res &= rgb_to_b_2d(snx, sny, src, workt0.data.data());
@@ -1354,21 +1356,21 @@ namespace ggimg {
             return median_filter_2d(nx, ny, src, dst, k, std::move(worki));
         }
 
-    template <>
-        inline bool median_filter_2d_rgb<uint8_t>(int nx, int ny, const uint8_t * src, uint8_t * dst, int k, buffer<uint8_t> && workb, buffer<int> && worki) {
+    template <typename T>
+        bool median_filter_2d_rgb(int nx, int ny, const T * src, T * dst, int k, buffer<T> && workt, buffer<int> && worki) {
             if (nx <= 0) return false;
             if (ny <= 0) return false;
             if (k < 1) return false;
             if (src == nullptr) return false;
             if (dst == nullptr) return false;
 
-            workb.need = 2*nx*ny;
-            if (workb.init() == false) return false;
+            workt.need = 2*nx*ny;
+            if (workt.init() == false) return false;
+
+            T * work0 = workt.data.data();
+            T * work1 = workt.data.data() + nx*ny;
 
             bool res = true;
-
-            uint8_t * work0 = workb.data.data();
-            uint8_t * work1 = workb.data.data() + nx*ny;
 
             res &= rgb_to_r_2d(nx, ny, src, work0);
             res &= median_filter_2d_gray(nx, ny, work0, work1, k, std::move(worki));
@@ -1381,6 +1383,232 @@ namespace ggimg {
             res &= rgb_to_b_2d(nx, ny, src, work0);
             res &= median_filter_2d_gray(nx, ny, work0, work1, k, std::move(worki));
             res &= b_to_rgb_2d(nx, ny, work1, dst);
+
+            return res;
+        }
+
+    template <>
+        inline bool lhist_filter_2d<uint8_t>(int nx, int ny, const uint8_t * src, int * dst, int l, int k, buffer<uint8_t> && workt, buffer<int> && worki) {
+            if (nx <= 0) return false;
+            if (ny <= 0) return false;
+            if (src == nullptr) return false;
+            if (dst == nullptr) return false;
+            if (k < 1) return false;
+            if (2*k >= nx) return false;
+            if (2*k >= ny) return false;
+            if (l < 2) return false;
+            if (l > 256) return false;
+
+            workt.need = nx*ny;
+            if (workt.init() == false) return false;
+
+            worki.need = l*nx;
+            if (worki.init() == false) return false;
+            if (worki.zero() == false) return false;
+
+            if (convert_2d(nx, ny, (uint8_t) 0, (uint8_t) 255, src, (uint8_t) 0, (uint8_t) l, workt.data.data()) == false) return false;
+
+            for (int x = 0; x < nx; ++x) {
+                for (int y = 0; y <= k; ++y) {
+                    ++worki.data[l*x + workt.data[y*nx + x]];
+                }
+            }
+
+            int j = 0;
+            int nker = 0;
+            int hker[l];
+
+            for (int y = 0; y < k; ++y) {
+                nker = 0;
+                std::fill(hker, hker + l, 0);
+                for (int i = 0; i <= k; ++i) {
+                    for (j = 0; j < l; ++j) {
+                        hker[j] += worki.data[l*i + j];
+                        nker += worki.data[l*i + j];
+                    }
+                }
+
+                for (int x = 0; x < k; ++x) {
+                    for (j = 0; j < l; ++j) {
+                        dst[l*(y*nx + x) + j] = hker[j];
+                    }
+
+                    for (j = 0; j < l; ++j) {
+                        hker[j] += worki.data[l*(x + k + 1) + j];
+                        nker += worki.data[l*(x + k + 1) + j];
+                    }
+                }
+
+                for (int x = k; x < nx - k - 1; ++x) {
+                    for (j = 0; j < l; ++j) {
+                        dst[l*(y*nx + x) + j] = hker[j];
+                    }
+
+                    for (j = 0; j < l; ++j) {
+                        hker[j] -= worki.data[l*(x - k) + j];
+                        nker -= worki.data[l*(x - k) + j];
+                    }
+
+                    for (j = 0; j < l; ++j) {
+                        hker[j] += worki.data[l*(x + k + 1) + j];
+                        nker += worki.data[l*(x + k + 1) + j];
+                    }
+                }
+
+                for (int x = nx - k - 1; x < nx; ++x) {
+                    for (j = 0; j < l; ++j) {
+                        dst[l*(y*nx + x) + j] = hker[j];
+                    }
+
+                    for (j = 0; j < l; ++j) {
+                        hker[j] -= worki.data[l*(x - k) + j];
+                        nker -= worki.data[l*(x - k) + j];
+                    }
+                }
+
+                for (int x = 0; x < nx; ++x) {
+                    ++worki.data[l*x + workt.data[(y + k + 1)*nx + x]];
+                }
+            }
+
+            for (int y = k; y < ny - k - 1; ++y) {
+                nker = 0;
+                std::fill(hker, hker + l, 0);
+                for (int i = 0; i <= k; ++i) {
+                    for (j = 0; j < l; ++j) {
+                        hker[j] += worki.data[l*i + j];
+                        nker += worki.data[l*i + j];
+                    }
+                }
+
+                for (int x = 0; x < k; ++x) {
+                    for (j = 0; j < l; ++j) {
+                        dst[l*(y*nx + x) + j] = hker[j];
+                    }
+
+                    for (j = 0; j < l; ++j) {
+                        hker[j] += worki.data[l*(x + k + 1) + j];
+                        nker += worki.data[l*(x + k + 1) + j];
+                    }
+                }
+
+                for (int x = k; x < nx - k - 1; ++x) {
+                    for (j = 0; j < l; ++j) {
+                        dst[l*(y*nx + x) + j] = hker[j];
+                    }
+
+                    for (j = 0; j < l; ++j) {
+                        hker[j] -= worki.data[l*(x - k) + j];
+                        nker -= worki.data[l*(x - k) + j];
+                    }
+
+                    for (j = 0; j < l; ++j) {
+                        hker[j] += worki.data[l*(x + k + 1) + j];
+                        nker += worki.data[l*(x + k + 1) + j];
+                    }
+                }
+
+                for (int x = nx - k - 1; x < nx; ++x) {
+                    for (j = 0; j < l; ++j) {
+                        dst[l*(y*nx + x) + j] = hker[j];
+                    }
+
+                    for (j = 0; j < l; ++j) {
+                        hker[j] -= worki.data[l*(x - k) + j];
+                        nker -= worki.data[l*(x - k) + j];
+                    }
+                }
+
+                for (int x = 0; x < nx; ++x) {
+                    --worki.data[l*x + workt.data[(y - k)*nx + x]];
+                    ++worki.data[l*x + workt.data[(y + k + 1)*nx + x]];
+                }
+            }
+
+            for (int y = ny - k - 1; y < ny; ++y) {
+                nker = 0;
+                std::fill(hker, hker + l, 0);
+                for (int i = 0; i <= k; ++i) {
+                    for (j = 0; j < l; ++j) {
+                        hker[j] += worki.data[l*i + j];
+                        nker += worki.data[l*i + j];
+                    }
+                }
+
+                for (int x = 0; x < k; ++x) {
+                    for (j = 0; j < l; ++j) {
+                        dst[l*(y*nx + x) + j] = hker[j];
+                    }
+
+                    for (j = 0; j < l; ++j) {
+                        hker[j] += worki.data[l*(x + k + 1) + j];
+                        nker += worki.data[l*(x + k + 1) + j];
+                    }
+                }
+
+                for (int x = k; x < nx - k - 1; ++x) {
+                    for (j = 0; j < l; ++j) {
+                        dst[l*(y*nx + x) + j] = hker[j];
+                    }
+
+                    for (j = 0; j < l; ++j) {
+                        hker[j] -= worki.data[l*(x - k) + j];
+                        nker -= worki.data[l*(x - k) + j];
+                    }
+
+                    for (j = 0; j < l; ++j) {
+                        hker[j] += worki.data[l*(x + k + 1) + j];
+                        nker += worki.data[l*(x + k + 1) + j];
+                    }
+                }
+
+                for (int x = nx - k - 1; x < nx; ++x) {
+                    for (j = 0; j < l; ++j) {
+                        dst[l*(y*nx + x) + j] = hker[j];
+                    }
+
+                    for (j = 0; j < l; ++j) {
+                        hker[j] -= worki.data[l*(x - k) + j];
+                        nker -= worki.data[l*(x - k) + j];
+                    }
+                }
+
+                for (int x = 0; x < nx; ++x) {
+                    --worki.data[l*x + workt.data[(y - k)*nx + x]];
+                }
+            }
+
+            return true;
+        }
+
+    template <typename T>
+        bool lhist_filter_2d_gray(int nx, int ny, const T * src, int * dst, int l, int k, buffer<T> && workt, buffer<int> && worki) {
+            return lhist_filter_2d(nx, ny, src, dst, l, k, std::move(workt), std::move(worki));
+        }
+
+    template <typename T>
+        bool lhist_filter_2d_rgb(int nx, int ny, const T * src, int * dst, int l, int k, buffer<T> && workt0, buffer<T> && workt1, buffer<int> && worki) {
+            if (nx <= 0) return false;
+            if (ny <= 0) return false;
+            if (k < 1) return false;
+            if (src == nullptr) return false;
+            if (dst == nullptr) return false;
+
+            workt0.need = nx*ny;
+            if (workt0.init() == false) return false;
+
+            T * work0 = workt0.data.data();
+
+            bool res = true;
+
+            res &= rgb_to_r_2d(nx, ny, src, work0);
+            res &= lhist_filter_2d_gray(nx, ny, work0, dst + 0*l*nx*ny, l, k, std::move(workt1), std::move(worki));
+
+            res &= rgb_to_g_2d(nx, ny, src, work0);
+            res &= lhist_filter_2d_gray(nx, ny, work0, dst + 1*l*nx*ny, l, k, std::move(workt1), std::move(worki));
+
+            res &= rgb_to_b_2d(nx, ny, src, work0);
+            res &= lhist_filter_2d_gray(nx, ny, work0, dst + 2*l*nx*ny, l, k, std::move(workt1), std::move(worki));
 
             return res;
         }
