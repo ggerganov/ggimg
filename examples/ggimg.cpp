@@ -90,8 +90,9 @@ int main(int argc, char ** argv) {
     Image2D img_scale_nn_maxside;
     Image2D img_scale_li;
     Image2D img_scale_li_maxside;
-    Image2D img_transform_homography_gray_nn;
-    Image2D img_transform_homography_rgb_nn;
+    Image2D img_scale_li_maxside_rgb;
+    Image2D img_transform_homography_nn_gray;
+    Image2D img_transform_homography_nn_rgb;
 
     {
         printf("[+] Read/write ppm\n");
@@ -231,8 +232,8 @@ int main(int argc, char ** argv) {
         printf("[+] ggimg::gaussian_filter_rgb_2d\n");
 
         img_gaussian_filter_rgb.resize(3*nx*ny);
-        if (ggimg::gaussian_filter_rgb_2d(nx, ny, img_rgb.data(), img_gaussian_filter_rgb.data(), 3.0f) == false) {
-            printf("Failed ggimg::gaussian_filter_rgb_2d\n");
+        if (ggimg::gaussian_filter_2d_rgb(nx, ny, img_rgb.data(), img_gaussian_filter_rgb.data(), 3.0f) == false) {
+            printf("Failed ggimg::gaussian_filter_2d_rgb\n");
             return -1;
         }
 
@@ -255,8 +256,8 @@ int main(int argc, char ** argv) {
         printf("[+] ggimg::median_filter_rgb_2d\n");
 
         img_median_filter_rgb.resize(3*nx*ny);
-        if (ggimg::median_filter_rgb_2d(nx, ny, img_rgb.data(), img_median_filter_rgb.data(), 5) == false) {
-            printf("Failed ggimg::median_filter_rgb_2d\n");
+        if (ggimg::median_filter_2d_rgb(nx, ny, img_rgb.data(), img_median_filter_rgb.data(), 5) == false) {
+            printf("Failed ggimg::median_filter_2d_rgb\n");
             return -1;
         }
 
@@ -310,27 +311,40 @@ int main(int argc, char ** argv) {
     }
 
     {
-        printf("[+] ggimg::transform_homography_gray_nn\n");
+        printf("[+] ggimg::scale_li_maxside_2d_rgb\n");
 
-        img_transform_homography_gray_nn.resize(nx*ny);
-        if (ggimg::transform_homography_gray_nn(nx, ny, img_gray.data(), { 0.68, -0.48, 0.38, 0.87, 0.81, -0.43, -0.15, 0.12, 1.00 }, nx, ny, img_transform_homography_gray_nn.data()) == false) {
-            printf("Failed ggimg::transform_homography_gray_nn \n");
+        int snx = -1;
+        int sny = -1;
+        if (ggimg::scale_li_maxside_2d_rgb(nx, ny, img_rgb.data(), 317, snx, sny, img_scale_li_maxside_rgb) == false) {
+            printf("Failed ggimg::scale_li_maxside_2d_rgb\n");
             return -1;
         }
 
-        write_ppm("ggimg_transform_homography_gray_nn.ppm", nx, ny, img_transform_homography_gray_nn, 1);
+        write_ppm("ggimg_scale_maxside_rgb.ppm", snx, sny, img_scale_li_maxside_rgb, 3);
     }
 
     {
-        printf("[+] ggimg::transform_homography_rgb_nn\n");
+        printf("[+] ggimg::transform_homography_nn_gray\n");
 
-        img_transform_homography_rgb_nn.resize(3*nx*ny);
-        if (ggimg::transform_homography_rgb_nn(nx, ny, img_rgb.data(), { 0.68, -0.48, 0.38, 0.87, 0.81, -0.43, -0.15, 0.12, 1.00 }, nx, ny, img_transform_homography_rgb_nn.data()) == false) {
-            printf("Failed ggimg::transform_homography_rgb_nn \n");
+        img_transform_homography_nn_gray.resize(nx*ny);
+        if (ggimg::transform_homography_nn_gray(nx, ny, img_gray.data(), { 0.68, -0.48, 0.38, 0.87, 0.81, -0.43, -0.15, 0.12, 1.00 }, nx, ny, img_transform_homography_nn_gray.data()) == false) {
+            printf("Failed ggimg::transform_homography_nn_gray \n");
             return -1;
         }
 
-        write_ppm("ggimg_transform_homography_rgb_nn.ppm", nx, ny, img_transform_homography_rgb_nn, 3);
+        write_ppm("ggimg_transform_homography_nn_gray.ppm", nx, ny, img_transform_homography_nn_gray, 1);
+    }
+
+    {
+        printf("[+] ggimg::transform_homography_nn_rgb\n");
+
+        img_transform_homography_nn_rgb.resize(3*nx*ny);
+        if (ggimg::transform_homography_nn_rgb(nx, ny, img_rgb.data(), { 0.68, -0.48, 0.38, 0.87, 0.81, -0.43, -0.15, 0.12, 1.00 }, nx, ny, img_transform_homography_nn_rgb.data()) == false) {
+            printf("Failed ggimg::transform_homography_nn_rgb \n");
+            return -1;
+        }
+
+        write_ppm("ggimg_transform_homography_nn_rgb.ppm", nx, ny, img_transform_homography_nn_rgb, 3);
     }
 
     printf("All done\n");
