@@ -144,6 +144,13 @@ namespace ggimg {
     template <typename T> bool scale_li_3d(int snx, int sny, int snz, const T * src, float sx, float sy, float sz, int & dnx, int & dny, int & dnz, std::vector<T> & dst, int nthreads = 1);
     template <typename T> bool scale_li_isotropic_3d(int snx, int sny, int snz, const T * src, float s, int & dnx, int & dny, int & dnz, std::vector<T> & dst, int nthreads = 1);
 
+    //
+    // Filesystem operations (to enable, define GGIMG_FS before including this header)
+    //
+
+    template <typename T> bool read_ppm(const char * fname, int & nx, int & ny, std::vector<T> & img);
+    template <typename T> bool write_ppm(const char * fname, int nx, int ny, const std::vector<T> & img, int bpp = 3);
+
 }
 
 //
@@ -2046,6 +2053,73 @@ namespace ggimg {
     template <typename T>
         bool scale_nn_isotropic_3d(int snx, int sny, int snz, const T * src, float s, int & dnx, int & dny, int & dnz, std::vector<T> & dst, int nthreads) {
             return scale_nn_3d(snx, sny, snz, src, s, s, s, dnx, dny, dnz, dst, nthreads);
+        }
+
+}
+
+#endif
+
+#ifdef GGIMG_FS
+
+//
+// Filesystem operations
+//
+
+#include <fstream>
+#include <string>
+
+namespace ggimg {
+    template <>
+        inline bool read_ppm<uint8_t>(const char * fname, int & nx, int & ny, std::vector<uint8_t> & img) {
+            std::ifstream fin(fname, std::ios::binary);
+            if (fin.good() == false) return false;
+
+            int ifmt = -1;
+            int imax = -1;
+
+            {
+                std::string fmt;
+                fin >> fmt;
+                //if (fmt == "P1") ifmt = 1;
+                //if (fmt == "P2") ifmt = 2;
+                //if (fmt == "P3") ifmt = 3;
+                //if (fmt == "P4") ifmt = 4;
+                //if (fmt == "P5") ifmt = 5;
+                if (fmt == "P6") ifmt = 6;
+            }
+
+            if (ifmt == -1) return false;
+
+            fin >> nx >> ny >> imax;
+
+            if (fin.eof()) return false;
+
+            img.resize(3*nx*ny);
+            fin.read((char *)(img.data()), 1);
+            fin.read((char *)(img.data()), 3*nx*ny);
+
+            if (fin.eof()) return false;
+
+            return true;
+        }
+
+    template <>
+        inline bool write_ppm<uint8_t>(const char * fname, int nx, int ny, const std::vector<uint8_t> & img, int bpp) {
+            std::ofstream fout(fname, std::ios::binary);
+
+            if (bpp == 1) fout << "P5\n";
+            if (bpp == 3) fout << "P6\n";
+
+            fout << nx << " " << ny << "\n255\n";
+
+            if (bpp == 1) fout.write((char *)(img.data()), nx*ny);
+            if (bpp == 3) fout.write((char *)(img.data()), 3*nx*ny);
+
+            fout << "\n";
+
+            fout.close();
+
+            return true;
         }
 
 }

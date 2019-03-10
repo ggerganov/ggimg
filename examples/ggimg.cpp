@@ -3,64 +3,13 @@
  *  \author Georgi Gerganov
  */
 
+#define GGIMG_FS
 #include "ggimg.h"
 
 #include <map>
 #include <cstdio>
-#include <fstream>
 #include <vector>
 #include <string>
-
-bool read_ppm(const char * fname, int & nx, int & ny, std::vector<uint8_t> & img) {
-    std::ifstream fin(fname, std::ios::binary);
-    if (fin.good() == false) return false;
-
-    int ifmt = -1;
-    int imax = -1;
-
-    {
-        std::string fmt;
-        fin >> fmt;
-        //if (fmt == "P1") ifmt = 1;
-        //if (fmt == "P2") ifmt = 2;
-        //if (fmt == "P3") ifmt = 3;
-        //if (fmt == "P4") ifmt = 4;
-        //if (fmt == "P5") ifmt = 5;
-        if (fmt == "P6") ifmt = 6;
-    }
-
-    if (ifmt == -1) return false;
-
-    fin >> nx >> ny >> imax;
-
-    if (fin.eof()) return false;
-
-    img.resize(3*nx*ny);
-    fin.read((char *)(img.data()), 1);
-    fin.read((char *)(img.data()), 3*nx*ny);
-
-    if (fin.eof()) return false;
-
-    return true;
-}
-
-bool write_ppm(const char * fname, int nx, int ny, const std::vector<uint8_t> & img, int bpp = 3) {
-    std::ofstream fout(fname, std::ios::binary);
-
-    if (bpp == 1) fout << "P5\n";
-    if (bpp == 3) fout << "P6\n";
-
-    fout << nx << " " << ny << "\n255\n";
-
-    if (bpp == 1) fout.write((char *)(img.data()), nx*ny);
-    if (bpp == 3) fout.write((char *)(img.data()), 3*nx*ny);
-
-    fout << "\n";
-
-    fout.close();
-
-    return true;
-}
 
 int main(int argc, char ** argv) {
     printf("Usage: %s img.raw\n", argv[0]);
@@ -98,12 +47,12 @@ int main(int argc, char ** argv) {
     {
         printf("[+] Read/write ppm\n");
 
-        if (read_ppm(fname.c_str(), nx, ny, img_rgb) == false) {
+        if (ggimg::read_ppm(fname.c_str(), nx, ny, img_rgb) == false) {
             printf("Failed to read image '%s'\n", fname.c_str());
             return -1;
         }
 
-        if (write_ppm("ggimg_original.ppm", nx, ny, img_rgb, 3) == false) {
+        if (ggimg::write_ppm("ggimg_original.ppm", nx, ny, img_rgb, 3) == false) {
             printf("Failed to write P6 ppm\n");
             return -1;
         }
@@ -118,7 +67,7 @@ int main(int argc, char ** argv) {
             return -1;
         }
 
-        write_ppm("ggimg_luma601.ppm", nx, ny, img_luma601, 1);
+        ggimg::write_ppm("ggimg_luma601.ppm", nx, ny, img_luma601, 1);
     }
 
     {
@@ -130,7 +79,7 @@ int main(int argc, char ** argv) {
             return -1;
         }
 
-        write_ppm("ggimg_luma709.ppm", nx, ny, img_luma709, 1);
+        ggimg::write_ppm("ggimg_luma709.ppm", nx, ny, img_luma709, 1);
     }
 
     {
@@ -142,7 +91,7 @@ int main(int argc, char ** argv) {
             return -1;
         }
 
-        write_ppm("ggimg_gray.ppm", nx, ny, img_gray, 1);
+        ggimg::write_ppm("ggimg_gray.ppm", nx, ny, img_gray, 1);
     }
 
     {
@@ -154,7 +103,7 @@ int main(int argc, char ** argv) {
             return -1;
         }
 
-        write_ppm("ggimg_rgb.ppm", nx, ny, img_tmp, 3);
+        ggimg::write_ppm("ggimg_rgb.ppm", nx, ny, img_tmp, 3);
     }
 
     {
@@ -166,7 +115,7 @@ int main(int argc, char ** argv) {
             return -1;
         }
 
-        write_ppm("ggimg_normalize.ppm", nx, ny, img_normalize, 1);
+        ggimg::write_ppm("ggimg_normalize.ppm", nx, ny, img_normalize, 1);
     }
 
     {
@@ -178,7 +127,7 @@ int main(int argc, char ** argv) {
             return -1;
         }
 
-        write_ppm("ggimg_normalize_hist.ppm", nx, ny, img_normalize_hist, 1);
+        ggimg::write_ppm("ggimg_normalize_hist.ppm", nx, ny, img_normalize_hist, 1);
     }
 
     {
@@ -190,7 +139,7 @@ int main(int argc, char ** argv) {
             return -1;
         }
 
-        write_ppm("ggimg_gradient_x.ppm", nx, ny, img_gradient_x, 1);
+        ggimg::write_ppm("ggimg_gradient_x.ppm", nx, ny, img_gradient_x, 1);
     }
 
     {
@@ -202,7 +151,7 @@ int main(int argc, char ** argv) {
             return -1;
         }
 
-        write_ppm("ggimg_gradient_y.ppm", nx, ny, img_gradient_y, 1);
+        ggimg::write_ppm("ggimg_gradient_y.ppm", nx, ny, img_gradient_y, 1);
     }
 
     {
@@ -214,7 +163,7 @@ int main(int argc, char ** argv) {
             return -1;
         }
 
-        write_ppm("ggimg_gradient.ppm", nx, ny, img_gradient_xy, 1);
+        ggimg::write_ppm("ggimg_gradient.ppm", nx, ny, img_gradient_xy, 1);
     }
 
     {
@@ -226,7 +175,7 @@ int main(int argc, char ** argv) {
             return -1;
         }
 
-        write_ppm("ggimg_gaussian_filter.ppm", nx, ny, img_gaussian_filter, 1);
+        ggimg::write_ppm("ggimg_gaussian_filter.ppm", nx, ny, img_gaussian_filter, 1);
     }
 
     {
@@ -238,7 +187,7 @@ int main(int argc, char ** argv) {
             return -1;
         }
 
-        write_ppm("ggimg_gaussian_filter_rgb.ppm", nx, ny, img_gaussian_filter_rgb, 3);
+        ggimg::write_ppm("ggimg_gaussian_filter_rgb.ppm", nx, ny, img_gaussian_filter_rgb, 3);
     }
 
     {
@@ -250,7 +199,7 @@ int main(int argc, char ** argv) {
             return -1;
         }
 
-        write_ppm("ggimg_median_filter.ppm", nx, ny, img_median_filter, 1);
+        ggimg::write_ppm("ggimg_median_filter.ppm", nx, ny, img_median_filter, 1);
     }
 
     {
@@ -262,7 +211,7 @@ int main(int argc, char ** argv) {
             return -1;
         }
 
-        write_ppm("ggimg_median_filter_rgb.ppm", nx, ny, img_median_filter_rgb, 3);
+        ggimg::write_ppm("ggimg_median_filter_rgb.ppm", nx, ny, img_median_filter_rgb, 3);
     }
 
     {
@@ -275,7 +224,7 @@ int main(int argc, char ** argv) {
             return -1;
         }
 
-        write_ppm("ggimg_scale_nn.ppm", snx, sny, img_scale_nn, 1);
+        ggimg::write_ppm("ggimg_scale_nn.ppm", snx, sny, img_scale_nn, 1);
 
         int snx2 = -1;
         int sny2 = -1;
@@ -284,7 +233,7 @@ int main(int argc, char ** argv) {
             return -1;
         }
 
-        write_ppm("ggimg_scale_maxside.ppm", snx2, sny2, img_scale_nn_maxside, 1);
+        ggimg::write_ppm("ggimg_scale_maxside.ppm", snx2, sny2, img_scale_nn_maxside, 1);
     }
 
     {
@@ -297,7 +246,7 @@ int main(int argc, char ** argv) {
             return -1;
         }
 
-        write_ppm("ggimg_scale_li.ppm", snx, sny, img_scale_li, 1);
+        ggimg::write_ppm("ggimg_scale_li.ppm", snx, sny, img_scale_li, 1);
 
         printf("[+] ggimg::scale_li_maxside_2d\n");
 
@@ -308,7 +257,7 @@ int main(int argc, char ** argv) {
             return -1;
         }
 
-        write_ppm("ggimg_scale_maxside.ppm", snx2, sny2, img_scale_li_maxside, 1);
+        ggimg::write_ppm("ggimg_scale_maxside.ppm", snx2, sny2, img_scale_li_maxside, 1);
     }
 
     {
@@ -321,7 +270,7 @@ int main(int argc, char ** argv) {
             return -1;
         }
 
-        write_ppm("ggimg_scale_maxside_rgb.ppm", snx, sny, img_scale_li_maxside_rgb, 3);
+        ggimg::write_ppm("ggimg_scale_maxside_rgb.ppm", snx, sny, img_scale_li_maxside_rgb, 3);
     }
 
     {
@@ -333,7 +282,7 @@ int main(int argc, char ** argv) {
             return -1;
         }
 
-        write_ppm("ggimg_transform_homography_nn_gray.ppm", nx, ny, img_transform_homography_nn_gray, 1);
+        ggimg::write_ppm("ggimg_transform_homography_nn_gray.ppm", nx, ny, img_transform_homography_nn_gray, 1);
     }
 
     {
@@ -345,7 +294,7 @@ int main(int argc, char ** argv) {
             return -1;
         }
 
-        write_ppm("ggimg_transform_homography_nn_rgb.ppm", nx, ny, img_transform_homography_nn_rgb, 3);
+        ggimg::write_ppm("ggimg_transform_homography_nn_rgb.ppm", nx, ny, img_transform_homography_nn_rgb, 3);
     }
 
     //{
@@ -370,7 +319,7 @@ int main(int argc, char ** argv) {
     //                img_median_filter_rgb_converge[k] = tmp;
     //            }
 
-    //            write_ppm((std::string("ggimg_median_filter_rgb_converge_") + std::to_string(k) + ".ppm").c_str(), nx, ny, img_median_filter_rgb_converge[k], 3);
+    //            ggimg::write_ppm((std::string("ggimg_median_filter_rgb_converge_") + std::to_string(k) + ".ppm").c_str(), nx, ny, img_median_filter_rgb_converge[k], 3);
     //        }
     //    }
     //}
