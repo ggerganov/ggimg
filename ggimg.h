@@ -149,7 +149,10 @@ namespace ggimg {
     //
 
     template <typename T> bool read_ppm(const char * fname, int & nx, int & ny, std::vector<T> & img);
+
     template <typename T> bool write_ppm(const char * fname, int nx, int ny, const std::vector<T> & img, int bpp = 3);
+    template <typename T> bool write_ppm_gray(const char * fname, int nx, int ny, const std::vector<T> & img);
+    template <typename T> bool write_ppm_rgb(const char * fname, int nx, int ny, const std::vector<T> & img);
 
 }
 
@@ -2120,6 +2123,16 @@ namespace ggimg {
             fout.close();
 
             return true;
+        }
+
+    template <typename T>
+        bool write_ppm_gray(const char * fname, int nx, int ny, const std::vector<T> & img) {
+            return write_ppm(fname, nx, ny, img, 1);
+        }
+
+    template <typename T>
+        bool write_ppm_rgb(const char * fname, int nx, int ny, const std::vector<T> & img) {
+            return write_ppm(fname, nx, ny, img, 3);
         }
 
 }
