@@ -98,9 +98,9 @@ namespace ggimg {
     template <typename T> bool median_filter_2d_gray(int nx, int ny, const T * src, T * dst, int k, buffer<int> && worki = {});
     template <typename T> bool median_filter_2d_rgb(int nx, int ny, const T * src, T * dst, int k, buffer<T> && workt = {}, buffer<int> && worki = {});
 
-    template <typename T> bool lhist_filter_2d(int nx, int ny, const T * src, int * dst, int l, int k, buffer<T> && workt = {}, buffer<int> && worki = {});
-    template <typename T> bool lhist_filter_2d_gray(int nx, int ny, const T * src, int * dst, int l, int k, buffer<T> && workt = {}, buffer<int> && worki = {});
-    template <typename T> bool lhist_filter_2d_rgb(int nx, int ny, const T * src, int * dst, int l, int k, buffer<T> && workt0 = {}, buffer<T> && workt1 = {}, buffer<int> && worki = {});
+    template <typename T> bool lhist_filter_2d(int nx, int ny, const T * src, T * dst, int l, int k, buffer<T> && workt = {}, buffer<int> && worki = {});
+    template <typename T> bool lhist_filter_2d_gray(int nx, int ny, const T * src, T * dst, int l, int k, buffer<T> && workt = {}, buffer<int> && worki = {});
+    template <typename T> bool lhist_filter_2d_rgb(int nx, int ny, const T * src, T * dst, int l, int k, buffer<T> && workt0 = {}, buffer<T> && workt1 = {}, buffer<int> && worki = {});
 
     template <typename T> bool scale_nn_2d(int snx, int sny, const T * src, float sx, float sy, int & dnx, int & dny, std::vector<T> & dst);
     template <typename T> bool scale_nn_2d_gray(int snx, int sny, const T * src, float sx, float sy, int & dnx, int & dny, std::vector<T> & dst);
@@ -1388,7 +1388,7 @@ namespace ggimg {
         }
 
     template <>
-        inline bool lhist_filter_2d<uint8_t>(int nx, int ny, const uint8_t * src, int * dst, int l, int k, buffer<uint8_t> && workt, buffer<int> && worki) {
+        inline bool lhist_filter_2d<uint8_t>(int nx, int ny, const uint8_t * src, uint8_t * dst, int l, int k, buffer<uint8_t> && workt, buffer<int> && worki) {
             if (nx <= 0) return false;
             if (ny <= 0) return false;
             if (src == nullptr) return false;
@@ -1399,182 +1399,213 @@ namespace ggimg {
             if (l < 2) return false;
             if (l > 256) return false;
 
-            workt.need = nx*ny;
-            if (workt.init() == false) return false;
-
-            worki.need = l*nx;
+            worki.need = 256*nx;
             if (worki.init() == false) return false;
             if (worki.zero() == false) return false;
 
-            if (convert_2d(nx, ny, (uint8_t) 0, (uint8_t) 255, src, (uint8_t) 0, (uint8_t) l, workt.data.data()) == false) return false;
-
             for (int x = 0; x < nx; ++x) {
                 for (int y = 0; y <= k; ++y) {
-                    ++worki.data[l*x + workt.data[y*nx + x]];
+                    ++worki.data[256*x + src[y*nx + x]];
                 }
             }
 
             int j = 0;
             int nker = 0;
-            int hker[l];
+            int hker[256];
 
             for (int y = 0; y < k; ++y) {
                 nker = 0;
-                std::fill(hker, hker + l, 0);
+                std::fill(hker, hker + 256, 0);
                 for (int i = 0; i <= k; ++i) {
-                    for (j = 0; j < l; ++j) {
-                        hker[j] += worki.data[l*i + j];
-                        nker += worki.data[l*i + j];
+                    for (j = 0; j < 256; ++j) {
+                        hker[j] += worki.data[256*i + j];
+                        nker += worki.data[256*i + j];
                     }
                 }
 
                 for (int x = 0; x < k; ++x) {
-                    for (j = 0; j < l; ++j) {
-                        dst[l*(y*nx + x) + j] = hker[j];
+                    int ncur = hker[0];
+                    for (int ll = 0, j = 1; ll < l; ++ll) {
+                        for (; j < 256 && ncur < (ll + 1)*(nker/(l + 1)); ++j) {
+                            ncur += hker[j];
+                        }
+                        dst[l*(y*nx + x) + ll] = j - 1;
                     }
 
-                    for (j = 0; j < l; ++j) {
-                        hker[j] += worki.data[l*(x + k + 1) + j];
-                        nker += worki.data[l*(x + k + 1) + j];
+                    for (j = 0; j < 256; ++j) {
+                        hker[j] += worki.data[256*(x + k + 1) + j];
+                        nker += worki.data[256*(x + k + 1) + j];
                     }
                 }
 
                 for (int x = k; x < nx - k - 1; ++x) {
-                    for (j = 0; j < l; ++j) {
-                        dst[l*(y*nx + x) + j] = hker[j];
+                    int ncur = hker[0];
+                    for (int ll = 0, j = 1; ll < l; ++ll) {
+                        for (; j < 256 && ncur < (ll + 1)*(nker/(l + 1)); ++j) {
+                            ncur += hker[j];
+                        }
+                        dst[l*(y*nx + x) + ll] = j - 1;
                     }
 
-                    for (j = 0; j < l; ++j) {
-                        hker[j] -= worki.data[l*(x - k) + j];
-                        nker -= worki.data[l*(x - k) + j];
+                    for (j = 0; j < 256; ++j) {
+                        hker[j] -= worki.data[256*(x - k) + j];
+                        nker -= worki.data[256*(x - k) + j];
                     }
 
-                    for (j = 0; j < l; ++j) {
-                        hker[j] += worki.data[l*(x + k + 1) + j];
-                        nker += worki.data[l*(x + k + 1) + j];
+                    for (j = 0; j < 256; ++j) {
+                        hker[j] += worki.data[256*(x + k + 1) + j];
+                        nker += worki.data[256*(x + k + 1) + j];
                     }
                 }
 
                 for (int x = nx - k - 1; x < nx; ++x) {
-                    for (j = 0; j < l; ++j) {
-                        dst[l*(y*nx + x) + j] = hker[j];
+                    int ncur = hker[0];
+                    for (int ll = 0, j = 1; ll < l; ++ll) {
+                        for (; j < 256 && ncur < (ll + 1)*(nker/(l + 1)); ++j) {
+                            ncur += hker[j];
+                        }
+                        dst[l*(y*nx + x) + ll] = j - 1;
                     }
 
-                    for (j = 0; j < l; ++j) {
-                        hker[j] -= worki.data[l*(x - k) + j];
-                        nker -= worki.data[l*(x - k) + j];
+                    for (j = 0; j < 256; ++j) {
+                        hker[j] -= worki.data[256*(x - k) + j];
+                        nker -= worki.data[256*(x - k) + j];
                     }
                 }
 
                 for (int x = 0; x < nx; ++x) {
-                    ++worki.data[l*x + workt.data[(y + k + 1)*nx + x]];
+                    ++worki.data[256*x + src[(y + k + 1)*nx + x]];
                 }
             }
 
             for (int y = k; y < ny - k - 1; ++y) {
                 nker = 0;
-                std::fill(hker, hker + l, 0);
+                std::fill(hker, hker + 256, 0);
                 for (int i = 0; i <= k; ++i) {
-                    for (j = 0; j < l; ++j) {
-                        hker[j] += worki.data[l*i + j];
-                        nker += worki.data[l*i + j];
+                    for (j = 0; j < 256; ++j) {
+                        hker[j] += worki.data[256*i + j];
+                        nker += worki.data[256*i + j];
                     }
                 }
 
                 for (int x = 0; x < k; ++x) {
-                    for (j = 0; j < l; ++j) {
-                        dst[l*(y*nx + x) + j] = hker[j];
+                    int ncur = hker[0];
+                    for (int ll = 0, j = 1; ll < l; ++ll) {
+                        for (; j < 256 && ncur < (ll + 1)*(nker/(l + 1)); ++j) {
+                            ncur += hker[j];
+                        }
+                        dst[l*(y*nx + x) + ll] = j - 1;
                     }
 
-                    for (j = 0; j < l; ++j) {
-                        hker[j] += worki.data[l*(x + k + 1) + j];
-                        nker += worki.data[l*(x + k + 1) + j];
+                    for (j = 0; j < 256; ++j) {
+                        hker[j] += worki.data[256*(x + k + 1) + j];
+                        nker += worki.data[256*(x + k + 1) + j];
                     }
                 }
 
                 for (int x = k; x < nx - k - 1; ++x) {
-                    for (j = 0; j < l; ++j) {
-                        dst[l*(y*nx + x) + j] = hker[j];
+                    int ncur = hker[0];
+                    for (int ll = 0, j = 1; ll < l; ++ll) {
+                        for (; j < 256 && ncur < (ll + 1)*(nker/(l + 1)); ++j) {
+                            ncur += hker[j];
+                        }
+                        dst[l*(y*nx + x) + ll] = j - 1;
                     }
 
-                    for (j = 0; j < l; ++j) {
-                        hker[j] -= worki.data[l*(x - k) + j];
-                        nker -= worki.data[l*(x - k) + j];
+                    for (j = 0; j < 256; ++j) {
+                        hker[j] -= worki.data[256*(x - k) + j];
+                        nker -= worki.data[256*(x - k) + j];
                     }
 
-                    for (j = 0; j < l; ++j) {
-                        hker[j] += worki.data[l*(x + k + 1) + j];
-                        nker += worki.data[l*(x + k + 1) + j];
+                    for (j = 0; j < 256; ++j) {
+                        hker[j] += worki.data[256*(x + k + 1) + j];
+                        nker += worki.data[256*(x + k + 1) + j];
                     }
                 }
 
                 for (int x = nx - k - 1; x < nx; ++x) {
-                    for (j = 0; j < l; ++j) {
-                        dst[l*(y*nx + x) + j] = hker[j];
+                    int ncur = hker[0];
+                    for (int ll = 0, j = 1; ll < l; ++ll) {
+                        for (; j < 256 && ncur < (ll + 1)*(nker/(l + 1)); ++j) {
+                            ncur += hker[j];
+                        }
+                        dst[l*(y*nx + x) + ll] = j - 1;
                     }
 
-                    for (j = 0; j < l; ++j) {
-                        hker[j] -= worki.data[l*(x - k) + j];
-                        nker -= worki.data[l*(x - k) + j];
+                    for (j = 0; j < 256; ++j) {
+                        hker[j] -= worki.data[256*(x - k) + j];
+                        nker -= worki.data[256*(x - k) + j];
                     }
                 }
 
                 for (int x = 0; x < nx; ++x) {
-                    --worki.data[l*x + workt.data[(y - k)*nx + x]];
-                    ++worki.data[l*x + workt.data[(y + k + 1)*nx + x]];
+                    --worki.data[256*x + src[(y - k)*nx + x]];
+                    ++worki.data[256*x + src[(y + k + 1)*nx + x]];
                 }
             }
 
             for (int y = ny - k - 1; y < ny; ++y) {
                 nker = 0;
-                std::fill(hker, hker + l, 0);
+                std::fill(hker, hker + 256, 0);
                 for (int i = 0; i <= k; ++i) {
-                    for (j = 0; j < l; ++j) {
-                        hker[j] += worki.data[l*i + j];
-                        nker += worki.data[l*i + j];
+                    for (j = 0; j < 256; ++j) {
+                        hker[j] += worki.data[256*i + j];
+                        nker += worki.data[256*i + j];
                     }
                 }
 
                 for (int x = 0; x < k; ++x) {
-                    for (j = 0; j < l; ++j) {
-                        dst[l*(y*nx + x) + j] = hker[j];
+                    int ncur = hker[0];
+                    for (int ll = 0, j = 1; ll < l; ++ll) {
+                        for (; j < 256 && ncur < (ll + 1)*(nker/(l + 1)); ++j) {
+                            ncur += hker[j];
+                        }
+                        dst[l*(y*nx + x) + ll] = j - 1;
                     }
 
-                    for (j = 0; j < l; ++j) {
-                        hker[j] += worki.data[l*(x + k + 1) + j];
-                        nker += worki.data[l*(x + k + 1) + j];
+                    for (j = 0; j < 256; ++j) {
+                        hker[j] += worki.data[256*(x + k + 1) + j];
+                        nker += worki.data[256*(x + k + 1) + j];
                     }
                 }
 
                 for (int x = k; x < nx - k - 1; ++x) {
-                    for (j = 0; j < l; ++j) {
-                        dst[l*(y*nx + x) + j] = hker[j];
+                    int ncur = hker[0];
+                    for (int ll = 0, j = 1; ll < l; ++ll) {
+                        for (; j < 256 && ncur < (ll + 1)*(nker/(l + 1)); ++j) {
+                            ncur += hker[j];
+                        }
+                        dst[l*(y*nx + x) + ll] = j - 1;
                     }
 
-                    for (j = 0; j < l; ++j) {
-                        hker[j] -= worki.data[l*(x - k) + j];
-                        nker -= worki.data[l*(x - k) + j];
+                    for (j = 0; j < 256; ++j) {
+                        hker[j] -= worki.data[256*(x - k) + j];
+                        nker -= worki.data[256*(x - k) + j];
                     }
 
-                    for (j = 0; j < l; ++j) {
-                        hker[j] += worki.data[l*(x + k + 1) + j];
-                        nker += worki.data[l*(x + k + 1) + j];
+                    for (j = 0; j < 256; ++j) {
+                        hker[j] += worki.data[256*(x + k + 1) + j];
+                        nker += worki.data[256*(x + k + 1) + j];
                     }
                 }
 
                 for (int x = nx - k - 1; x < nx; ++x) {
-                    for (j = 0; j < l; ++j) {
-                        dst[l*(y*nx + x) + j] = hker[j];
+                    int ncur = hker[0];
+                    for (int ll = 0, j = 1; ll < l; ++ll) {
+                        for (; j < 256 && ncur < (ll + 1)*(nker/(l + 1)); ++j) {
+                            ncur += hker[j];
+                        }
+                        dst[l*(y*nx + x) + ll] = j - 1;
                     }
 
-                    for (j = 0; j < l; ++j) {
-                        hker[j] -= worki.data[l*(x - k) + j];
-                        nker -= worki.data[l*(x - k) + j];
+                    for (j = 0; j < 256; ++j) {
+                        hker[j] -= worki.data[256*(x - k) + j];
+                        nker -= worki.data[256*(x - k) + j];
                     }
                 }
 
                 for (int x = 0; x < nx; ++x) {
-                    --worki.data[l*x + workt.data[(y - k)*nx + x]];
+                    --worki.data[256*x + src[(y - k)*nx + x]];
                 }
             }
 
@@ -1582,12 +1613,12 @@ namespace ggimg {
         }
 
     template <typename T>
-        bool lhist_filter_2d_gray(int nx, int ny, const T * src, int * dst, int l, int k, buffer<T> && workt, buffer<int> && worki) {
+        bool lhist_filter_2d_gray(int nx, int ny, const T * src, T * dst, int l, int k, buffer<T> && workt, buffer<int> && worki) {
             return lhist_filter_2d(nx, ny, src, dst, l, k, std::move(workt), std::move(worki));
         }
 
     template <typename T>
-        bool lhist_filter_2d_rgb(int nx, int ny, const T * src, int * dst, int l, int k, buffer<T> && workt0, buffer<T> && workt1, buffer<int> && worki) {
+        bool lhist_filter_2d_rgb(int nx, int ny, const T * src, T * dst, int l, int k, buffer<T> && workt0, buffer<T> && workt1, buffer<int> && worki) {
             if (nx <= 0) return false;
             if (ny <= 0) return false;
             if (k < 1) return false;
