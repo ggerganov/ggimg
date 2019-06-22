@@ -1672,8 +1672,8 @@ namespace ggimg {
                     float tx = (h[0]*ox + h[1]*oy + h[2])/(h[6]*ox + h[7]*oy + h[8]);
                     float ty = (h[3]*ox + h[4]*oy + h[5])/(h[6]*ox + h[7]*oy + h[8]);
 
-                    int ix = tx*snx - 0.5f;
-                    int iy = ty*sny - 0.5f;
+                    int ix = std::round(tx*snx - 0.5f);
+                    int iy = std::round(ty*sny - 0.5f);
 
                     if (ix < 0 || ix >= snx || iy < 0 || iy >= sny) {
                         dst[y*dnx + x] = 0;
@@ -1709,8 +1709,8 @@ namespace ggimg {
                     float tx = (h[0]*ox + h[1]*oy + h[2])/(h[6]*ox + h[7]*oy + h[8]);
                     float ty = (h[3]*ox + h[4]*oy + h[5])/(h[6]*ox + h[7]*oy + h[8]);
 
-                    int ix = tx*snx - 0.5f;
-                    int iy = ty*sny - 0.5f;
+                    int ix = std::round(tx*snx - 0.5f);
+                    int iy = std::round(ty*sny - 0.5f);
 
                     if (ix < 0 || ix >= snx || iy < 0 || iy >= sny) {
                         dst[3*(y*dnx + x) + 0] = 0;
