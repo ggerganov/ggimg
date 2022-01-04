@@ -1398,7 +1398,7 @@ namespace ggimg {
         }
 
     template <>
-        inline bool lhist_filter_2d<uint8_t>(int nx, int ny, const uint8_t * src, uint8_t * dst, int l, int k, buffer<uint8_t> && workt, buffer<int> && worki) {
+        inline bool lhist_filter_2d<uint8_t>(int nx, int ny, const uint8_t * src, uint8_t * dst, int l, int k, buffer<uint8_t> && /*workt*/, buffer<int> && worki) {
             if (nx <= 0) return false;
             if (ny <= 0) return false;
             if (src == nullptr) return false;
